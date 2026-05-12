@@ -304,12 +304,28 @@ function getDday(){
   return`🌍 미주리 생활 D+${-diff}`;
 }
 
+function getCarryover(targetM){
+  const idx=MONTHS.indexOf(targetM);
+  if(idx<=0) return 0;
+  let carry=0;
+  for(let i=0;i<idx;i++){
+    const m=MONTHS[i]; const d=state.finance[m]||{}; const r=state.rate;
+    const sg=(parseFloat(d.seonggok)||0)*r; const yn=parseFloat(d.yonhap)||0;
+    const rent=(parseFloat(d.rent)||0)*r; const living=(parseFloat(d.living)||0)*r;
+    const korF=parseFloat(d.korFixed)||0; const trE=(parseFloat(d.travelExp)||0)*r;
+    const bal=(sg+yn+carry)-(rent+living+korF+trE);
+    carry=bal>0?bal:0;
+  }
+  return carry;
+}
+
 function calcFin(m){
   const d=state.finance[m]||{}; const r=state.rate;
   const sg=(parseFloat(d.seonggok)||0)*r; const yn=parseFloat(d.yonhap)||0;
+  const carry=getCarryover(m);
   const rent=(parseFloat(d.rent)||0)*r; const living=(parseFloat(d.living)||0)*r;
   const korF=parseFloat(d.korFixed)||0; const trE=(parseFloat(d.travelExp)||0)*r;
-  return{d,sg,yn,rent,living,korF,trE,income:sg+yn,expense:rent+living+korF+trE};
+  return{d,sg,yn,carry,rent,living,korF,trE,income:sg+yn+carry,expense:rent+living+korF+trE};
 }
 
 /* ── Travel amount helpers ── */
@@ -466,7 +482,7 @@ function renderContent(){
 /* ── Finance ── */
 function renderFinance(){
   const fi=MONTHS.indexOf(state.finM);
-  const {d,sg,yn,rent,living,korF,trE,income,expense}=calcFin(state.finM);
+  const {d,sg,yn,carry,rent,living,korF,trE,income,expense}=calcFin(state.finM);
   const bal=income-expense;
   const isSeonggokMonth=!!SEONGGOK[state.finM];
   return`
@@ -480,34 +496,40 @@ function renderFinance(){
     ${isSeonggokMonth?`<div class="preset-badge">✅ 성곡재단 지원금 지급 월 — $${(SEONGGOK[state.finM]||0).toLocaleString()} 자동입력</div>`:""}
     <div class="field">
       <label class="lbl">성곡재단 지원금 (USD)</label>
-      <div class="i-wrap"><span class="prefix">$</span><input class="inp" type="number" value="${d.seonggok||""}" placeholder="0" oninput="upFin('seonggok',this.value)"/></div>
+      <div class="i-wrap"><span class="prefix">$</span><input class="inp" type="text" inputmode="numeric" value="${fmtComma(d.seonggok)}" placeholder="0" oninput="inputFin(this,'seonggok')"/></div>
       ${d.seonggok?`<div class="hint">≈ ${fmt(sg)}원 (환율 ${fmt(state.rate)}원 적용)</div>`:""}
     </div>
     <div class="field">
       <label class="lbl">연합뉴스 월급 (KRW)</label>
-      <div class="i-wrap"><span class="prefix">₩</span><input class="inp" type="number" value="${d.yonhap||""}" placeholder="0" oninput="upFin('yonhap',this.value)"/></div>
+      <div class="i-wrap"><span class="prefix">₩</span><input class="inp" type="text" inputmode="numeric" value="${fmtComma(d.yonhap)}" placeholder="0" oninput="inputFin(this,'yonhap')"/></div>
     </div>
-    <div class="divider">총 수입 &nbsp; ${fmt(income)}원</div>
+    ${carry>0?`
+    <div class="field">
+      <label class="lbl" style="color:#C05A2A">↩️ 전월 이월 잔액</label>
+      <div style="background:#FFF8F0;border:1.5px solid #F0C896;border-radius:10px;padding:11px 14px;font-size:14px;font-weight:700;color:#C05A2A">+${fmt(carry)}원</div>
+      <div class="hint" style="color:#C05A2A">지난 달 잔액이 이번 달 수입에 합산됩니다</div>
+    </div>`:""}
+    <div class="divider">총 수입 &nbsp; ${fmt(income)}원${carry>0?` <span style="font-size:10.5px;font-weight:500;color:#C05A2A">(이월 ${fmt(carry)}원 포함)</span>`:""}</div>
   </div>
   <div class="card">
     <div class="card-title">📤 이달의 지출</div>
     <div class="field">
       <label class="lbl">월세 (USD)</label>
-      <div class="i-wrap"><span class="prefix">$</span><input class="inp" type="number" value="${d.rent||""}" placeholder="0" oninput="upFin('rent',this.value)"/></div>
+      <div class="i-wrap"><span class="prefix">$</span><input class="inp" type="text" inputmode="numeric" value="${fmtComma(d.rent)}" placeholder="0" oninput="inputFin(this,'rent')"/></div>
       ${d.rent?`<div class="hint">≈ ${fmt(rent)}원</div>`:""}
     </div>
     <div class="field">
       <label class="lbl">미국 생활비 (USD)</label>
-      <div class="i-wrap"><span class="prefix">$</span><input class="inp" type="number" value="${d.living||""}" placeholder="0" oninput="upFin('living',this.value)"/></div>
+      <div class="i-wrap"><span class="prefix">$</span><input class="inp" type="text" inputmode="numeric" value="${fmtComma(d.living)}" placeholder="0" oninput="inputFin(this,'living')"/></div>
       ${d.living?`<div class="hint">≈ ${fmt(living)}원</div>`:""}
     </div>
     <div class="field">
       <label class="lbl">한국 고정지출 (KRW) — 보험·적금·대출 등</label>
-      <div class="i-wrap"><span class="prefix">₩</span><input class="inp" type="number" value="${d.korFixed||""}" placeholder="0" oninput="upFin('korFixed',this.value)"/></div>
+      <div class="i-wrap"><span class="prefix">₩</span><input class="inp" type="text" inputmode="numeric" value="${fmtComma(d.korFixed)}" placeholder="0" oninput="inputFin(this,'korFixed')"/></div>
     </div>
     <div class="field">
       <label class="lbl">여행 지출 (USD)</label>
-      <div class="i-wrap"><span class="prefix">$</span><input class="inp" type="number" value="${d.travelExp||""}" placeholder="0" oninput="upFin('travelExp',this.value)"/></div>
+      <div class="i-wrap"><span class="prefix">$</span><input class="inp" type="text" inputmode="numeric" value="${fmtComma(d.travelExp)}" placeholder="0" oninput="inputFin(this,'travelExp')"/></div>
       ${d.travelExp?`<div class="hint">≈ ${fmt(trE)}원</div>`:""}
     </div>
     <div class="divider">총 지출 &nbsp; ${fmt(expense)}원</div>
@@ -774,6 +796,27 @@ function moveFin(d){const i=MONTHS.indexOf(state.finM),n=i+d;if(n>=0&&n<MONTHS.l
 function moveCal(d){const i=MONTHS.indexOf(state.calM),n=i+d;if(n>=0&&n<MONTHS.length){state.calM=MONTHS[n];renderContent();}}
 
 let _finTimer=null;
+
+function fmtComma(v){
+  const raw=String(v||"").replace(/[^0-9]/g,"");
+  if(!raw) return "";
+  return Number(raw).toLocaleString("ko-KR");
+}
+
+function inputFin(el,field){
+  const raw=el.value.replace(/[^0-9]/g,"");
+  const cursor=el.selectionStart;
+  const oldLen=el.value.length;
+  el.value=raw?Number(raw).toLocaleString("ko-KR"):"";
+  const newLen=el.value.length;
+  el.selectionStart=el.selectionEnd=Math.max(0,cursor+(newLen-oldLen));
+  if(!state.finance[state.finM]) state.finance[state.finM]={};
+  state.finance[state.finM][field]=raw;
+  saveLocal();
+  clearTimeout(_finTimer);
+  _finTimer=setTimeout(()=>renderContent(),700);
+}
+
 function upFin(field,val){
   if(!state.finance[state.finM]) state.finance[state.finM]={};
   state.finance[state.finM][field]=val;
