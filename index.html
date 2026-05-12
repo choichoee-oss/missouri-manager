@@ -779,9 +779,8 @@ function upFin(field,val){
   state.finance[state.finM][field]=val;
   saveLocal();
   clearTimeout(_finTimer);
-  _finTimer=setTimeout(()=>renderContent(), 600);
+  _finTimer=setTimeout(()=>renderContent(),700);
 }
-
 
 function addEvent(){
   const date=document.getElementById("ev-date")?.value;
