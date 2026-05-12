@@ -773,9 +773,14 @@ function renderChecklist(){
 function moveFin(d){const i=MONTHS.indexOf(state.finM),n=i+d;if(n>=0&&n<MONTHS.length){state.finM=MONTHS[n];renderContent();}}
 function moveCal(d){const i=MONTHS.indexOf(state.calM),n=i+d;if(n>=0&&n<MONTHS.length){state.calM=MONTHS[n];renderContent();}}
 
+let _finTimer=null;
 function upFin(field,val){
   if(!state.finance[state.finM]) state.finance[state.finM]={};
-  state.finance[state.finM][field]=val; saveLocal(); renderContent();
+  state.finance[state.finM][field]=val;
+  saveLocal();
+  clearTimeout(_finTimer);
+  _finTimer=setTimeout(()=>renderContent(), 600);
+}
 }
 
 function addEvent(){
