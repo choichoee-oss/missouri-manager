@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Missouri Life Manager</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Verdana,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;background:#F4F7FB;color:#1E2D45;min-height:100vh}
+input,select,textarea{outline:none;font-family:Verdana,'Malgun Gothic',sans-serif}
+button:disabled{opacity:.3;cursor:not-allowed!important}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:#E8EDF4}::-webkit-scrollbar-thumb{background:#8AAAC8;border-radius:2px}
+.app{max-width:640px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+
+/* ── Header ── */
+.hdr{background:linear-gradient(135deg,#152238 0%,#1E3A5F 100%);color:white;padding:18px 18px 14px;flex-shrink:0}
+.htop{display:flex;justify-content:space-between;align-items:flex-start}
+.app-name{font-size:20px;font-weight:700;letter-spacing:-.3px;color:#fff}
+.app-sub{font-size:10.5px;color:#8FB8D8;margin-top:3px}
+.badge{background:#C85C3A;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;letter-spacing:1px;color:white}
+.d-badge{margin-top:10px;background:rgba(255,255,255,.1);border-radius:7px;padding:6px 12px;font-size:11.5px;display:inline-flex;align-items:center;gap:6px;color:#D4E8F8}
+
+/* ── Rate Bar ── */
+.rate-bar{background:#1A3254;padding:8px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-bottom:1px solid #1E3D6A}
+.rate-left{font-size:11px;color:#7FB3D8}
+.rate-input{background:transparent;border:none;border-bottom:1.5px solid #5ECFFF;color:#5ECFFF;font-size:15px;font-weight:700;width:80px;text-align:center;font-family:Verdana,sans-serif;padding:0 2px}
+.rate-edit-btn{background:none;border:1px solid #3D6A94;color:#7FB3D8;border-radius:5px;padding:2px 7px;font-size:10px;cursor:pointer;font-family:Verdana,sans-serif}
+
+/* ── Tab Bar ── */
+.tab-bar{background:#1C3354;display:flex;border-bottom:3px solid #C85C3A;flex-shrink:0}
+.tab-btn{flex:1;padding:12px 4px;background:transparent;border:none;color:#A8CCEB;font-size:11px;cursor:pointer;font-family:Verdana,'Malgun Gothic',sans-serif;font-weight:600;white-space:nowrap;transition:all .2s;letter-spacing:-.2px}
+.tab-btn:hover{color:#D4EAFF;background:rgba(255,255,255,.07)}
+.tab-btn.active{color:#FFFFFF;background:rgba(200,92,58,.35);border-bottom:3px solid #FF7A50;margin-bottom:-3px}
+
+/* ── Content ── */
+.content{padding:14px;flex:1;overflow-y:auto}
+
+/* ── Cards ── */
+.card{background:white;border-radius:12px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,.08);margin-bottom:14px}
+.card-title{font-weight:700;font-size:13px;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #EAF0F8;color:#1C3354;letter-spacing:-.2px}
+
+/* ── Banner ── */
+.banner{background:linear-gradient(135deg,#1C3354,#1E4A7A);color:white;border-radius:12px;padding:14px 16px;margin-bottom:14px}
+
+/* ── Month Nav ── */
+.mnav{display:flex;align-items:center;justify-content:center;gap:20px;margin-bottom:14px}
+.mn-btn{background:#C85C3A;color:white;border:none;border-radius:8px;width:34px;height:34px;font-size:18px;cursor:pointer;font-weight:700;display:flex;align-items:center;justify-content:center}
+.mn-label{font-size:16px;font-weight:700;min-width:130px;text-align:center;color:#1C3354}
+
+/* ── Inputs ── */
+.field{margin-bottom:12px}
+.lbl{display:block;font-size:10.5px;color:#7A93B0;margin-bottom:4px;font-weight:600;letter-spacing:.3px}
+.i-wrap{display:flex;align-items:stretch;border:1.5px solid #C8D8E8;border-radius:8px;overflow:hidden;transition:border .2s;background:white}
+.i-wrap:focus-within{border-color:#3A7BD5}
+.prefix{padding:0 10px;background:#EEF3FA;color:#6B88A8;font-size:12px;display:flex;align-items:center;border-right:1px solid #C8D8E8;min-width:34px;justify-content:center;font-weight:700}
+.inp{flex:1;border:none;padding:10px 12px;font-size:13.5px;background:transparent;font-family:Verdana,'Malgun Gothic',sans-serif;width:100%}
+.hint{font-size:10.5px;color:#8AAAC8;margin-top:3px}
+.divider{border-top:1.5px dashed #D8E6F2;margin-top:10px;padding-top:8px;font-weight:700;font-size:13px;color:#1C3354}
+
+/* ── Summary ── */
+.sum-card{border-radius:12px;padding:14px;border:2px solid}
+.sum-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;margin-top:8px}
+.sum-item{display:flex;flex-direction:column;gap:3px;font-size:11px}
+
+/* ── Preset badge ── */
+.preset-badge{display:inline-block;background:#EBF3FF;color:#2563EB;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;margin-bottom:8px}
+
+/* ── Calendar ── */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.day-hdr{text-align:center;font-size:10px;font-weight:700;padding:5px 0;color:#6B88A8}
+.cal-cell{border-radius:6px;padding:3px 2px;min-height:52px;background:white;border:1px solid #E8EFF8}
+.day-n{font-size:10.5px;text-align:center;margin-bottom:2px;font-weight:600}
+.e-dot{border-radius:3px;padding:1px 3px;color:white;font-size:7.5px;margin-bottom:1px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:1.5}
+
+/* ── Buttons ── */
+.add-btn{width:100%;padding:11px;background:#C85C3A;color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:Verdana,'Malgun Gothic',sans-serif;transition:opacity .2s}
+.add-btn:hover{opacity:.88}
+.add-btn.secondary{background:#1C3354}
+.form-box{background:white;border-radius:12px;padding:14px;margin:8px 0 14px;box-shadow:0 2px 12px rgba(0,0,0,.08);display:flex;flex-direction:column;gap:10px}
+.f-inp{padding:9px 12px;border:1.5px solid #C8D8E8;border-radius:8px;font-size:13px;font-family:Verdana,'Malgun Gothic',sans-serif;width:100%;background:white}
+.f-inp:focus{border-color:#3A7BD5}
+.row2{display:flex;gap:8px}
+.save-btn{flex:1;padding:10px;background:#1C3354;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-family:Verdana,'Malgun Gothic',sans-serif}
+.cancel-btn{flex:1;padding:10px;background:#E0E8F2;color:#4A6785;border:none;border-radius:8px;cursor:pointer;font-family:Verdana,'Malgun Gothic',sans-serif}
+
+/* ── Event list ── */
+.ev-list{background:white;border-radius:12px;padding:14px;margin-top:10px}
+.ev-item{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid #EAF0F8}
+.ev-item:last-child{border:none}
+.ev-dot{width:9px;height:9px;border-radius:50%;margin-top:3px;flex-shrink:0}
+.legend{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:10.5px;color:#6B88A8}
+
+/* ── Travel ── */
+.tr-card{background:white;border-radius:12px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:10px;position:relative}
+.map-btn{display:inline-block;margin-top:8px;padding:5px 10px;background:#EEF4FF;color:#2563EB;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none}
+.del-btn{position:absolute;top:12px;right:12px;background:none;border:none;color:#C8D8E8;font-size:16px;cursor:pointer;padding:2px 6px;border-radius:4px;line-height:1}
+.del-btn:hover{color:#C85C3A;background:#FEF2F2}
+
+/* ── Map ── */
+#travel-map{height:340px;border-radius:10px;overflow:hidden}
+.leaflet-popup-content b{font-family:Verdana,sans-serif;font-size:12px}
+.leaflet-popup-content{font-family:Verdana,'Malgun Gothic',sans-serif;font-size:11px;line-height:1.6}
+.map-legend-row{display:flex;gap:16px;margin:8px 0 10px;font-size:11px;color:#6B88A8}
+.map-legend-row span{display:flex;align-items:center;gap:5px}
+.map-dot{width:11px;height:11px;border-radius:50%;display:inline-block;flex-shrink:0}
+
+/* ── Wish card ── */
+.wish-card{background:#FFFBF0;border:1.5px solid #FDE68A;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px;position:relative}
+.wish-card .del-btn{top:8px;right:8px}
+
+/* ── Checklist ── */
+.prog-wrap{background:#D8E6F2;border-radius:6px;height:8px;overflow:hidden;margin-top:6px}
+.prog-bar{height:100%;background:linear-gradient(90deg,#1C8A4E,#34D47C);border-radius:6px;transition:width .4s}
+.ch-cat{margin-bottom:14px}
+.ch-cat-title{font-weight:700;font-size:12px;color:#1C3354;margin-bottom:6px;padding-bottom:4px;border-bottom:2px solid #C85C3A;letter-spacing:-.2px}
+.ch-item{display:flex;align-items:center;gap:10px;padding:9px 2px;cursor:pointer;border-bottom:1px solid #EAF0F8;user-select:none}
+.ch-item:last-child{border:none}
+.ch-box{width:22px;height:22px;border-radius:6px;border:2px solid #B8CDE0;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.empty{text-align:center;padding:36px 20px;color:#9AB0C8;line-height:2;font-size:13px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="hdr">
+    <div class="htop">
+      <div>
+        <div class="app-name">Missouri Life Manager</div>
+        <div class="app-sub">미주리 라이프 매니저 &nbsp;·&nbsp; 2026.07 – 2027.08</div>
+      </div>
+      <div class="badge">🦅 MO</div>
+    </div>
+    <div class="d-badge" id="d-day">⏳ 계산중…</div>
+  </div>
+
+  <div class="rate-bar">
+    <span class="rate-left">💱 USD → KRW &nbsp;<span id="rate-date" style="opacity:.7;font-size:10px"></span></span>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span id="rate-display" style="font-size:15px;font-weight:700;color:#5ECFFF"></span>
+      <button class="rate-edit-btn" onclick="toggleRateEdit()">✏️ 수정</button>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab(0)">💰 재무관리</button>
+    <button class="tab-btn" onclick="switchTab(1)">📅 스케줄</button>
+    <button class="tab-btn" onclick="switchTab(2)">✈️ 여행관리</button>
+    <button class="tab-btn" onclick="switchTab(3)">✅ 출국준비</button>
+  </div>
+
+  <div class="content" id="main-content"></div>
+</div>
+
+<script>
+const DEPARTURE = new Date("2026-08-03");
+const TYPE_COLORS = {academic:"#2563EB",seminar:"#7C3AED",holiday:"#15803D",personal:"#C85C3A"};
+const TYPE_LABELS = {academic:"학사",seminar:"세미나",holiday:"공휴일",personal:"개인"};
+
+const MONTHS=[];
+for(let y=2026;y<=2027;y++)
+  for(let m=(y===2026?7:1);m<=(y===2027?8:12);m++)
+    MONTHS.push(`${y}-${String(m).padStart(2,"0")}`);
+
+const SEONGGOK={"2026-07":9250,"2026-10":9000,"2027-01":9000,"2027-04":9000};
+
+function getThursdays(start,end){
+  const dates=[];const d=new Date(start);
+  while(d.getDay()!==4)d.setDate(d.getDate()+1);
+  const e=new Date(end);
+  while(d<=e){dates.push(d.toISOString().slice(0,10));d.setDate(d.getDate()+7);}
+  return dates;
+}
+const FALL_THU=getThursdays("2026-08-26","2026-12-17");
+const SPRING_THU=getThursdays("2027-01-20","2027-05-13");
+
+function buildPresetEvents(){
+  const base=[
+    {id:"e_dep",date:"2026-08-03",title:"✈️ 미국 출발",type:"personal"},
+    {id:"e_f1",date:"2026-08-26",title:"🎓 가을학기 개강",type:"academic"},
+    {id:"e_f2",date:"2026-09-07",title:"🇺🇸 Labor Day",type:"holiday"},
+    {id:"e_f3",date:"2026-10-12",title:"🇺🇸 Columbus Day",type:"holiday"},
+    {id:"e_f4",date:"2026-11-11",title:"🇺🇸 Veterans Day",type:"holiday"},
+    {id:"e_f5",date:"2026-11-26",title:"🦃 Thanksgiving",type:"holiday"},
+    {id:"e_f6",date:"2026-12-18",title:"🎓 가을학기 종강",type:"academic"},
+    {id:"e_f7",date:"2026-12-19",title:"❄️ 겨울방학",type:"academic"},
+    {id:"e_f8",date:"2026-12-25",title:"🎄 Christmas",type:"holiday"},
+    {id:"e_f9",date:"2027-01-01",title:"🎆 New Year's Day",type:"holiday"},
+    {id:"e_f10",date:"2027-01-18",title:"🇺🇸 MLK Day",type:"holiday"},
+    {id:"e_f11",date:"2027-01-20",title:"🎓 봄학기 개강",type:"academic"},
+    {id:"e_f12",date:"2027-02-15",title:"🇺🇸 Presidents' Day",type:"holiday"},
+    {id:"e_f13",date:"2027-05-14",title:"🎓 봄학기 종강",type:"academic"},
+    {id:"e_f14",date:"2027-05-31",title:"🇺🇸 Memorial Day",type:"holiday"},
+    {id:"e_f15",date:"2027-07-04",title:"🎆 Independence Day",type:"holiday"},
+    {id:"e_f16",date:"2027-08-01",title:"✈️ 귀국 예정",type:"personal"},
+  ];
+  Object.entries(SEONGGOK).forEach(([m,amt])=>{
+    base.push({id:"sg_"+m,date:m+"-01",title:`💰 성곡재단 $${amt.toLocaleString()}`,type:"personal"});
+  });
+  FALL_THU.forEach((d,i)=>base.push({id:"sem_f"+i,date:d,title:"📚 목요 세미나",type:"seminar"}));
+  SPRING_THU.forEach((d,i)=>base.push({id:"sem_s"+i,date:d,title:"📚 목요 세미나",type:"seminar"}));
+  return base.map(e=>({...e,color:TYPE_COLORS[e.type]}));
+}
+
+function buildInitFinance(){
+  const fin={};
+  Object.entries(SEONGGOK).forEach(([m,amt])=>{fin[m]={seonggok:String(amt)};});
+  return fin;
+}
+
+const INIT_CHECKS=[
+  {id:1,cat:"📄 서류",text:"여권 유효기간 확인 (2년 이상 권장)",done:false},
+  {id:2,cat:"📄 서류",text:"J-1 비자 취득",done:false},
+  {id:3,cat:"📄 서류",text:"DS-2019 서류 수령",done:false},
+  {id:4,cat:"📄 서류",text:"성곡재단 파견 확인서",done:false},
+  {id:5,cat:"📄 서류",text:"국제운전면허증 발급",done:false},
+  {id:6,cat:"📄 서류",text:"영문 재직증명서",done:false},
+  {id:7,cat:"💳 금융",text:"해외 결제 카드 준비 (트래블월렛/하나)",done:false},
+  {id:8,cat:"💳 금융",text:"미국 은행 계좌 개설 준비 (Chase 등)",done:false},
+  {id:9,cat:"💳 금융",text:"달러 환전 ($500~1,000)",done:false},
+  {id:10,cat:"💳 금융",text:"해외 송금 앱 설치 (와이어바알리 등)",done:false},
+  {id:11,cat:"🏥 의료",text:"해외 여행자 보험 가입",done:false},
+  {id:12,cat:"🏥 의료",text:"영문 예방접종 기록 발급",done:false},
+  {id:13,cat:"🏥 의료",text:"상비약 챙기기 (소화제·진통제 등)",done:false},
+  {id:14,cat:"🏥 의료",text:"처방약 있으면 영문 처방전 준비",done:false},
+  {id:15,cat:"🏠 주거",text:"미주리 숙소 계약 완료",done:false},
+  {id:16,cat:"🏠 주거",text:"첫 달 렌트 + 보증금 준비",done:false},
+  {id:17,cat:"🏠 주거",text:"현지 생활용품 구매 목록 작성",done:false},
+  {id:18,cat:"📱 통신",text:"미국 유심 or eSIM 준비",done:false},
+  {id:19,cat:"📱 통신",text:"한국 번호 로밍/일시정지 결정",done:false},
+  {id:20,cat:"🧳 짐",text:"수하물 무게·규정 확인",done:false},
+  {id:21,cat:"🧳 짐",text:"겨울옷 챙기기 (미주리 겨울 춥고 눈 옴)",done:false},
+  {id:22,cat:"🧳 짐",text:"110V 변환 어댑터·멀티탭",done:false},
+];
+
+/* ── State ── */
+let state={
+  tab:0, rate:1472, rateDate:"오늘 기준", editingRate:false,
+  finance:buildInitFinance(),
+  finM:"2026-07",
+  events:buildPresetEvents(),
+  calM:"2026-08",
+  travels:[], checks:JSON.parse(JSON.stringify(INIT_CHECKS)),
+  wishlist:[],
+  geoCache:{},
+  catOrder:[...new Set(INIT_CHECKS.map(c=>c.cat))],
+  editCheckId:null,
+  addItemCatIdx:null,
+  showAddCat:false,
+  showEv:false, newEv:{date:"",title:"",type:"personal"},
+  showTr:false, newTr:{dest:"",start:"",end:"",usd:"",note:""},
+  showWish:false,
+};
+
+/* ── LocalStorage ── */
+function loadLocal(){
+  try{
+    const d=JSON.parse(localStorage.getItem("msl_data")||"{}");
+    if(d.finance) state.finance={...buildInitFinance(),...d.finance};
+    if(d.travels) state.travels=d.travels;
+    if(d.checks)  state.checks=d.checks;
+    if(d.rate)    state.rate=d.rate;
+    if(d.wishlist) state.wishlist=d.wishlist;
+    if(d.geoCache) state.geoCache=d.geoCache;
+    if(d.catOrder) state.catOrder=d.catOrder;
+    else if(d.checks) state.catOrder=[...new Set(d.checks.map(c=>c.cat))];
+  }catch(e){}
+}
+function saveLocal(){
+  try{
+    localStorage.setItem("msl_data",JSON.stringify({
+      finance:state.finance, travels:state.travels,
+      checks:state.checks, rate:state.rate,
+      wishlist:state.wishlist, geoCache:state.geoCache,
+      catOrder:state.catOrder
+    }));
+  }catch(e){}
+}
+
+/* ── Helpers ── */
+const fmt=(n,d=0)=>Number(n||0).toLocaleString("ko-KR",{maximumFractionDigits:d});
+const daysIn=(y,m)=>new Date(y,m,0).getDate();
+const firstDay=(y,m)=>new Date(y,m-1,1).getDay();
+const escapeHtml=s=>String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+
+function getDday(){
+  const diff=Math.ceil((DEPARTURE-new Date())/86400000);
+  if(diff>0) return`✈️ 미국 출발까지 D-${diff}`;
+  if(diff===0) return"✈️ 오늘 출발이에요!";
+  return`🌍 미주리 생활 D+${-diff}`;
+}
+
+function calcFin(m){
+  const d=state.finance[m]||{}; const r=state.rate;
+  const sg=(parseFloat(d.seonggok)||0)*r; const yn=parseFloat(d.yonhap)||0;
+  const rent=(parseFloat(d.rent)||0)*r; const living=(parseFloat(d.living)||0)*r;
+  const korF=parseFloat(d.korFixed)||0; const trE=(parseFloat(d.travelExp)||0)*r;
+  return{d,sg,yn,rent,living,korF,trE,income:sg+yn,expense:rent+living+korF+trE};
+}
+
+function updateRateDisplay(){
+  const el=document.getElementById("rate-display");
+  if(el) el.textContent=`1 USD = ${fmt(state.rate)} KRW`;
+  const dt=document.getElementById("rate-date");
+  if(dt) dt.textContent=state.rateDate;
+}
+
+function toggleRateEdit(){
+  state.editingRate=!state.editingRate;
+  const display=document.getElementById("rate-display");
+  if(state.editingRate){
+    display.innerHTML=`<input class="rate-input" id="rate-inp" type="number" value="${state.rate}" onchange="applyRate(this.value)" onblur="state.editingRate=false;updateRateDisplay()"/>`;
+    document.getElementById("rate-inp")?.focus();
+  }else{updateRateDisplay();}
+}
+
+function applyRate(v){
+  const n=parseInt(v);
+  if(n>500&&n<5000){state.rate=n;state.rateDate="수동 입력";saveLocal();if(state.tab===0)renderContent();}
+}
+
+/* ── Map ── */
+let mapInstance=null;
+
+async function getCoords(name){
+  if(state.geoCache[name]) return state.geoCache[name];
+  try{
+    await new Promise(r=>setTimeout(r,350)); // Nominatim rate limit
+    const res=await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(name)}&limit=1`,
+      {headers:{"Accept-Language":"en","User-Agent":"MissouriLifeManager/1.0"}}
+    );
+    const data=await res.json();
+    if(data.length>0){
+      const coords={lat:parseFloat(data[0].lat),lng:parseFloat(data[0].lon)};
+      state.geoCache[name]=coords;
+      saveLocal();
+      return coords;
+    }
+  }catch(e){}
+  return null;
+}
+
+function makeIcon(color, emoji){
+  return L.divIcon({
+    className:"",
+    html:`<div style="
+      width:32px;height:32px;border-radius:50% 50% 50% 0;
+      transform:rotate(-45deg);
+      background:${color};
+      border:3px solid white;
+      box-shadow:0 2px 8px rgba(0,0,0,.35);
+      display:flex;align-items:center;justify-content:center;
+    "><span style="transform:rotate(45deg);font-size:13px;line-height:1">${emoji}</span></div>`,
+    iconSize:[32,32],
+    iconAnchor:[16,32],
+    popupAnchor:[0,-34]
+  });
+}
+
+async function initTravelMap(){
+  if(mapInstance){mapInstance.remove();mapInstance=null;}
+  const el=document.getElementById("travel-map");
+  if(!el||typeof L==="undefined") return;
+
+  mapInstance=L.map("travel-map",{zoomControl:true}).setView([39.5,-98.5],4);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+    attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+    maxZoom:18
+  }).addTo(mapInstance);
+
+  const visitedIcon=makeIcon("#16A34A","✅");
+  const wishIcon=makeIcon("#D97706","⭐");
+
+  const allCoords=[];
+
+  for(const t of state.travels){
+    const c=await getCoords(t.dest);
+    if(c){
+      allCoords.push([c.lat,c.lng]);
+      L.marker([c.lat,c.lng],{icon:visitedIcon})
+        .addTo(mapInstance)
+        .bindPopup(`<b>✅ ${t.dest}</b><br>${t.start}${t.end&&t.end!==t.start?` ~ ${t.end}`:""}<br><span style="color:#16A34A;font-weight:700">$${fmt(t.usd,0)}</span>${t.note?`<br><span style="color:#666">${t.note}</span>`:""}`);
+    }
+  }
+
+  for(const w of state.wishlist){
+    const c=await getCoords(w.name);
+    if(c){
+      allCoords.push([c.lat,c.lng]);
+      L.marker([c.lat,c.lng],{icon:wishIcon})
+        .addTo(mapInstance)
+        .bindPopup(`<b>⭐ ${w.name}</b>${w.note?`<br><span style="color:#666">${w.note}</span>`:""}`);
+    }
+  }
+
+  if(allCoords.length>0){
+    mapInstance.fitBounds(allCoords,{padding:[40,40],maxZoom:10});
+  }
+}
+
+/* ── Render ── */
+function renderAll(){
+  document.getElementById("d-day").textContent=getDday();
+  updateRateDisplay(); renderContent();
+}
+
+function switchTab(i){
+  if(i!==2&&mapInstance){mapInstance.remove();mapInstance=null;}
+  state.tab=i;
+  document.querySelectorAll(".tab-btn").forEach((b,idx)=>b.classList.toggle("active",idx===i));
+  renderContent();
+  if(i===2) setTimeout(()=>initTravelMap(),80);
+}
+
+function renderContent(){
+  const el=document.getElementById("main-content");
+  if(state.tab===0) el.innerHTML=renderFinance();
+  if(state.tab===1) el.innerHTML=renderSchedule();
+  if(state.tab===2){
+    if(mapInstance){mapInstance.remove();mapInstance=null;}
+    el.innerHTML=renderTravel();
+    setTimeout(()=>initTravelMap(),80);
+  }
+  if(state.tab===3) el.innerHTML=renderChecklist();
+}
+
+/* ── Finance ── */
+function renderFinance(){
+  const fi=MONTHS.indexOf(state.finM);
+  const {d,sg,yn,rent,living,korF,trE,income,expense}=calcFin(state.finM);
+  const bal=income-expense;
+  const isSeonggokMonth=!!SEONGGOK[state.finM];
+  return`
+  <div class="mnav">
+    <button class="mn-btn" onclick="moveFin(-1)" ${fi===0?"disabled":""}>‹</button>
+    <span class="mn-label">${state.finM.replace("-","년 ").replace(/(\d+)$/,m=>parseInt(m)+"월")}</span>
+    <button class="mn-btn" onclick="moveFin(1)" ${fi===MONTHS.length-1?"disabled":""}>›</button>
+  </div>
+  <div class="card">
+    <div class="card-title">📥 이달의 수입</div>
+    ${isSeonggokMonth?`<div class="preset-badge">✅ 성곡재단 지원금 지급 월 — $${(SEONGGOK[state.finM]||0).toLocaleString()} 자동입력</div>`:""}
+    <div class="field">
+      <label class="lbl">성곡재단 지원금 (USD)</label>
+      <div class="i-wrap"><span class="prefix">$</span><input class="inp" type="number" value="${d.seonggok||""}" placeholder="0" oninput="upFin('seonggok',this.value)"/></div>
+      ${d.seonggok?`<div class="hint">≈ ${fmt(sg)}원 (환율 ${fmt(state.rate)}원 적용)</div>`:""}
+    </div>
+    <div class="field">
+      <label class="lbl">연합뉴스 월급 (KRW)</label>
+      <div class="i-wrap"><span class="prefix">₩</span><input class="inp" type="number" value="${d.yonhap||""}" placeholder="0" oninput="upFin('yonhap',this.value)"/></div>
+    </div>
+    <div class="divider">총 수입 &nbsp; ${fmt(income)}원</div>
+  </div>
+  <div class="card">
+    <div class="card-title">📤 이달의 지출</div>
+    <div class="field">
+      <label class="lbl">월세 (USD)</label>
+      <div class="i-wrap"><span class="prefix">$</span><input class="inp" type="number" value="${d.rent||""}" placeholder="0" oninput="upFin('rent',this.value)"/></div>
+      ${d.rent?`<div class="hint">≈ ${fmt(rent)}원</div>`:""}
+    </div>
+    <div class="field">
+      <label class="lbl">미국 생활비 (USD)</label>
+      <div class="i-wrap"><span class="prefix">$</span><input class="inp" type="number" value="${d.living||""}" placeholder="0" oninput="upFin('living',this.value)"/></div>
+      ${d.living?`<div class="hint">≈ ${fmt(living)}원</div>`:""}
+    </div>
+    <div class="field">
+      <label class="lbl">한국 고정지출 (KRW) — 보험·적금·대출 등</label>
+      <div class="i-wrap"><span class="prefix">₩</span><input class="inp" type="number" value="${d.korFixed||""}" placeholder="0" oninput="upFin('korFixed',this.value)"/></div>
+    </div>
+    <div class="field">
+      <label class="lbl">여행 지출 (USD)</label>
+      <div class="i-wrap"><span class="prefix">$</span><input class="inp" type="number" value="${d.travelExp||""}" placeholder="0" oninput="upFin('travelExp',this.value)"/></div>
+      ${d.travelExp?`<div class="hint">≈ ${fmt(trE)}원</div>`:""}
+    </div>
+    <div class="divider">총 지출 &nbsp; ${fmt(expense)}원</div>
+  </div>
+  <div class="sum-card" style="background:${bal>=0?"#F0FDF6":"#FEF2F2"};border-color:${bal>=0?"#16A34A":"#DC2626"}">
+    <div style="font-weight:700;font-size:13px;color:#1C3354">📊 이달의 결산</div>
+    <div class="sum-row">
+      <div class="sum-item"><span style="color:#6B88A8">수입</span><strong style="color:#16A34A;font-size:14px">+${fmt(income)}원</strong></div>
+      <div class="sum-item"><span style="color:#6B88A8">지출</span><strong style="color:#DC2626;font-size:14px">-${fmt(expense)}원</strong></div>
+      <div class="sum-item"><span style="color:#6B88A8">잔액</span><strong style="color:${bal>=0?"#16A34A":"#DC2626"};font-size:17px">${bal>=0?"+":""}${fmt(bal)}원</strong></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <div class="card-title">📆 성곡재단 지원금 일정</div>
+    ${Object.entries(SEONGGOK).map(([m,amt])=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #EAF0F8;font-size:12.5px">
+      <span style="color:${m===state.finM?"#C85C3A":"#1C3354"};font-weight:${m===state.finM?700:500}">${m.replace("-","년 ").replace(/(\d+)$/,n=>parseInt(n)+"월")}</span>
+      <span style="font-weight:700;color:#2563EB">$${amt.toLocaleString()} <span style="font-size:10.5px;color:#8AAAC8">≈ ${fmt(amt*state.rate)}원</span></span>
+    </div>`).join("")}
+    <div style="padding-top:10px;font-size:11px;color:#8AAAC8">총 지원금: $36,250 ≈ ${fmt(36250*state.rate)}원</div>
+  </div>`;
+}
+
+/* ── Schedule ── */
+function renderSchedule(){
+  const ci=MONTHS.indexOf(state.calM);
+  const [cy,cm]=state.calM.split("-").map(Number);
+  const days=daysIn(cy,cm); const fd=firstDay(cy,cm);
+  const todayStr=new Date().toISOString().slice(0,10);
+  const DOW=["일","월","화","수","목","금","토"];
+  const DOW_C=["#DC2626","#4A6785","#4A6785","#4A6785","#4A6785","#4A6785","#2563EB"];
+  let cells="";
+  for(let i=0;i<fd;i++) cells+=`<div></div>`;
+  for(let d=1;d<=days;d++){
+    const ds=`${cy}-${String(cm).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const devs=state.events.filter(e=>e.date===ds);
+    const isToday=ds===todayStr; const dow=(fd+d-1)%7;
+    cells+=`<div class="cal-cell" style="background:${isToday?"#FFF7ED":"white"};border:${isToday?"2px solid #C85C3A":"1px solid #E8EFF8"}">
+      <div class="day-n" style="color:${DOW_C[dow]};font-weight:${isToday?700:500}">${d}</div>
+      ${devs.slice(0,2).map(ev=>`<div class="e-dot" style="background:${ev.color}">${ev.title}</div>`).join("")}
+      ${devs.length>2?`<div style="font-size:7px;color:#999;padding:0 2px">+${devs.length-2}개</div>`:""}
+    </div>`;
+  }
+  const monthEvs=state.events.filter(e=>e.date.startsWith(state.calM)).sort((a,b)=>a.date.localeCompare(b.date));
+  const nonSeminar=monthEvs.filter(e=>e.type!=="seminar");
+  const seminarCount=monthEvs.filter(e=>e.type==="seminar").length;
+  const evForm=state.showEv?`
+    <div class="form-box">
+      <input class="f-inp" type="date" id="ev-date" value="${state.newEv.date}"/>
+      <input class="f-inp" id="ev-title" placeholder="일정 제목" value="${state.newEv.title}"/>
+      <select class="f-inp" id="ev-type">
+        <option value="academic" ${state.newEv.type==="academic"?"selected":""}>학사일정</option>
+        <option value="seminar" ${state.newEv.type==="seminar"?"selected":""}>세미나</option>
+        <option value="holiday" ${state.newEv.type==="holiday"?"selected":""}>공휴일</option>
+        <option value="personal" ${state.newEv.type==="personal"?"selected":""}>개인</option>
+      </select>
+      <div class="row2">
+        <button class="save-btn" onclick="addEvent()">저장</button>
+        <button class="cancel-btn" onclick="state.showEv=false;renderContent()">취소</button>
+      </div>
+    </div>`:"";
+  return`
+  <div class="mnav">
+    <button class="mn-btn" onclick="moveCal(-1)" ${ci===0?"disabled":""}>‹</button>
+    <span class="mn-label">${cy}년 ${cm}월</span>
+    <button class="mn-btn" onclick="moveCal(1)" ${ci===MONTHS.length-1?"disabled":""}>›</button>
+  </div>
+  <div class="cal-grid" style="margin-bottom:4px">
+    ${DOW.map((d,i)=>`<div class="day-hdr" style="color:${DOW_C[i]}">${d}</div>`).join("")}
+  </div>
+  <div class="cal-grid" style="margin-bottom:12px">${cells}</div>
+  <button class="add-btn" onclick="state.showEv=!state.showEv;renderContent()">+ 일정 추가</button>
+  ${evForm}
+  ${(nonSeminar.length>0||seminarCount>0)?`
+  <div class="ev-list">
+    <div style="font-weight:700;font-size:12.5px;margin-bottom:10px;color:#1C3354">이달의 일정</div>
+    ${seminarCount>0?`<div class="ev-item"><div class="ev-dot" style="background:#7C3AED"></div><div><div style="font-size:12.5px;font-weight:700">📚 목요 세미나</div><div style="font-size:10.5px;color:#9AB0C8">이번 달 ${seminarCount}회</div></div></div>`:""}
+    ${nonSeminar.map(ev=>`<div class="ev-item"><div class="ev-dot" style="background:${ev.color}"></div><div><div style="font-size:12.5px;font-weight:600">${ev.title}</div><div style="font-size:10.5px;color:#9AB0C8">${ev.date}</div></div></div>`).join("")}
+  </div>`:""}
+  <div class="legend">
+    ${Object.entries(TYPE_LABELS).map(([t,l])=>`<div class="leg-item"><div style="width:8px;height:8px;border-radius:50%;background:${TYPE_COLORS[t]}"></div><span>${l}</span></div>`).join("")}
+  </div>`;
+}
+
+/* ── Travel ── */
+function renderTravel(){
+  const total=state.travels.reduce((s,t)=>s+(parseFloat(t.usd)||0),0);
+  const trForm=state.showTr?`
+    <div class="form-box">
+      <input class="f-inp" id="tr-dest" placeholder="목적지 (예: Chicago, IL)" value="${state.newTr.dest}"/>
+      <div class="row2">
+        <input class="f-inp" type="date" id="tr-start" value="${state.newTr.start}" style="flex:1"/>
+        <input class="f-inp" type="date" id="tr-end" value="${state.newTr.end}" style="flex:1"/>
+      </div>
+      <div class="i-wrap"><span class="prefix">$</span><input class="inp" type="number" id="tr-usd" placeholder="총 지출" value="${state.newTr.usd}"/></div>
+      <input class="f-inp" id="tr-note" placeholder="메모 (숙소·교통·입장료 등)" value="${state.newTr.note}"/>
+      <div class="row2">
+        <button class="save-btn" onclick="addTravel()">저장</button>
+        <button class="cancel-btn" onclick="state.showTr=false;renderContent()">취소</button>
+      </div>
+    </div>`:"";
+
+  const wishForm=state.showWish?`
+    <div class="form-box" style="background:#FFFBF0;border:1.5px solid #FDE68A">
+      <input class="f-inp" id="wish-name" placeholder="가고 싶은 곳 (예: Yellowstone NP, WY)"/>
+      <input class="f-inp" id="wish-note" placeholder="메모 (이유·예상 비용 등)"/>
+      <div class="row2">
+        <button class="save-btn" style="background:#D97706" onclick="addWish()">저장</button>
+        <button class="cancel-btn" onclick="state.showWish=false;renderContent()">취소</button>
+      </div>
+    </div>`:"";
+
+  return`
+  <!-- 지도 -->
+  <div class="card" style="padding:14px">
+    <div class="card-title" style="margin-bottom:6px">🗺 내 여행 지도</div>
+    <div class="map-legend-row">
+      <span><span class="map-dot" style="background:#16A34A"></span>여행한 곳 (${state.travels.length})</span>
+      <span><span class="map-dot" style="background:#D97706"></span>가고 싶은 곳 (${state.wishlist.length})</span>
+      <span style="margin-left:auto;color:#B0C4D8;font-size:10px">핀 클릭 시 상세 정보</span>
+    </div>
+    <div id="travel-map"></div>
+    <div style="font-size:10px;color:#B0C4D8;margin-top:6px;text-align:right">© OpenStreetMap contributors</div>
+  </div>
+
+  <!-- 여행 기록 -->
+  <div class="banner">
+    <div style="font-size:11px;color:#8BBDE0;margin-bottom:4px">🌍 누적 여행 지출</div>
+    <div style="font-weight:700;font-size:21px">$${fmt(total,0)} <span style="font-size:13px;font-weight:400;color:#8BBDE0">≈ ${fmt(total*state.rate)}원</span></div>
+    <div style="font-size:11px;color:#8BBDE0;margin-top:3px">총 ${state.travels.length}번의 여행 기록</div>
+  </div>
+  <button class="add-btn" style="margin-bottom:12px" onclick="state.showTr=!state.showTr;if(state.showTr)state.showWish=false;renderContent()">+ 여행 기록 추가</button>
+  ${trForm}
+  ${state.travels.length===0?`<div class="empty">아직 기록된 여행이 없어요 ✈️<br/>첫 미국 여행을 추가해보세요!</div>`
+    :state.travels.map(t=>`
+    <div class="tr-card">
+      <button class="del-btn" onclick="removeTravel('${t.id}')">×</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding-right:24px">
+        <div style="font-weight:700;font-size:15px">✅ ${t.dest}</div>
+        <div style="font-weight:700;color:#16A34A;font-size:15px">$${fmt(t.usd,0)}</div>
+      </div>
+      <div style="font-size:11px;color:#9AB0C8;margin-top:3px">${t.start}${t.end&&t.end!==t.start?` ~ ${t.end}`:""}</div>
+      ${t.note?`<div style="font-size:12.5px;color:#4A6785;margin-top:6px">${t.note}</div>`:""}
+      <div style="font-size:11px;color:#9AB0C8;margin-top:4px">≈ ${fmt((parseFloat(t.usd)||0)*state.rate)}원</div>
+      <a href="https://www.google.com/maps/search/${encodeURIComponent(t.dest)}" target="_blank" class="map-btn">🗺 Google Maps</a>
+    </div>`).join("")}
+
+  <!-- 버킷리스트 -->
+  <div style="margin-top:6px;margin-bottom:10px;display:flex;align-items:center;gap:10px">
+    <div style="font-weight:700;font-size:13px;color:#1C3354">⭐ 가고 싶은 곳</div>
+    <div style="flex:1;border-top:1px dashed #D8E6F2"></div>
+  </div>
+  <button class="add-btn secondary" style="margin-bottom:12px" onclick="state.showWish=!state.showWish;if(state.showWish)state.showTr=false;renderContent()">+ 버킷리스트 추가</button>
+  ${wishForm}
+  ${state.wishlist.length===0?`<div class="empty" style="padding:20px">버킷리스트를 추가해보세요 ⭐<br/><span style="font-size:11px">지도에 노란 핀으로 표시돼요</span></div>`
+    :state.wishlist.map(w=>`
+    <div class="wish-card">
+      <div style="font-size:20px;flex-shrink:0">⭐</div>
+      <div style="flex:1;padding-right:20px">
+        <div style="font-weight:700;font-size:13.5px;color:#1C3354">${w.name}</div>
+        ${w.note?`<div style="font-size:11.5px;color:#78716C;margin-top:3px">${w.note}</div>`:""}
+      </div>
+      <button class="del-btn" onclick="removeWish('${w.id}')">×</button>
+    </div>`).join("")}
+  `;
+}
+
+/* ── Checklist ── */
+function renderChecklist(){
+  const done=state.checks.filter(c=>c.done).length;
+  const total=state.checks.length;
+  const pct=total>0?Math.round(done/total*100):0;
+  const diff=Math.ceil((DEPARTURE-new Date())/86400000);
+
+  const addCatForm=state.showAddCat?`
+    <div class="form-box" style="margin-top:10px">
+      <input class="f-inp" id="new-cat-name" placeholder="카테고리 이름 (예: 🎒 추가 짐)"/>
+      <div class="row2">
+        <button class="save-btn" onclick="addCat()">추가</button>
+        <button class="cancel-btn" onclick="state.showAddCat=false;renderContent()">취소</button>
+      </div>
+    </div>`:"";
+
+  const catsHtml=state.catOrder.map((cat,ci)=>{
+    const items=state.checks.filter(c=>c.cat===cat);
+    const showAdd=state.addItemCatIdx===ci;
+
+    const addItemForm=showAdd?`
+      <div style="padding:10px 0 4px;border-bottom:1px solid #EAF0F8">
+        <input class="f-inp" id="new-item-text" placeholder="항목 내용 입력" style="margin-bottom:6px"/>
+        <div class="row2">
+          <button class="save-btn" onclick="addCheckItem(${ci})">추가</button>
+          <button class="cancel-btn" onclick="state.addItemCatIdx=null;renderContent()">취소</button>
+        </div>
+      </div>`:"";
+
+    const itemsHtml=items.map(item=>{
+      if(state.editCheckId===item.id){
+        return`<div style="padding:10px 0;border-bottom:1px solid #EAF0F8">
+          <input class="f-inp" id="edit-item-${item.id}" value="${escapeHtml(item.text)}" style="margin-bottom:6px"/>
+          <div class="row2">
+            <button class="save-btn" onclick="saveCheckItem(${item.id})">저장</button>
+            <button class="cancel-btn" onclick="state.editCheckId=null;renderContent()">취소</button>
+          </div>
+        </div>`;
+      }
+      return`<div style="display:flex;align-items:center;border-bottom:1px solid #EAF0F8">
+        <div class="ch-item" style="flex:1;border:none;min-width:0" onclick="toggleCheck(${item.id})">
+          <div class="ch-box" style="background:${item.done?"#16A34A":"white"};border-color:${item.done?"#16A34A":"#B8CDE0"};flex-shrink:0">
+            ${item.done?`<span style="color:white;font-size:12px;font-weight:700">✓</span>`:""}
+          </div>
+          <span style="font-size:13px;text-decoration:${item.done?"line-through":"none"};color:${item.done?"#9AB0C8":"#1E2D45"};word-break:break-all">${escapeHtml(item.text)}</span>
+        </div>
+        <div style="display:flex;gap:4px;padding:0 4px;flex-shrink:0">
+          <button onclick="state.editCheckId=${item.id};state.addItemCatIdx=null;renderContent()"
+            style="background:#F0F6FF;border:1px solid #C8D8F0;color:#4A7FBD;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;line-height:1">✏️</button>
+          <button onclick="deleteCheckItem(${item.id})"
+            style="background:#FFF0F0;border:1px solid #FECACA;color:#EF4444;border-radius:6px;padding:4px 8px;font-size:13px;cursor:pointer;font-weight:700;line-height:1">×</button>
+        </div>
+      </div>`;
+    }).join("");
+
+    return`<div class="ch-cat">
+      <div class="ch-cat-title" style="display:flex;justify-content:space-between;align-items:center;border-bottom:none;padding-bottom:0;margin-bottom:0">
+        <span>${escapeHtml(cat)}</span>
+        <div style="display:flex;gap:5px">
+          <button onclick="state.addItemCatIdx=state.addItemCatIdx===${ci}?null:${ci};state.editCheckId=null;renderContent()"
+            style="background:#EBF5FF;border:1px solid #BFDBFE;color:#2563EB;border-radius:5px;padding:3px 9px;font-size:10.5px;font-weight:700;cursor:pointer;font-family:Verdana,sans-serif">+ 항목</button>
+          <button onclick="deleteCat(${ci})"
+            style="background:#FFF0F0;border:1px solid #FECACA;color:#EF4444;border-radius:5px;padding:3px 8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Verdana,sans-serif">×</button>
+        </div>
+      </div>
+      <div style="border:1.5px solid #E8EFF8;border-radius:0 0 8px 8px;border-top:none;overflow:hidden;margin-top:0">
+        <div style="height:2px;background:#C85C3A"></div>
+        ${addItemForm}
+        ${itemsHtml}
+        ${items.length===0&&!showAdd?`<div style="font-size:12px;color:#B8CDD8;padding:12px;text-align:center">항목 없음 — 위 + 항목 버튼으로 추가하세요</div>`:""}
+      </div>
+    </div>`;
+  }).join("");
+
+  return`
+  <div class="banner">
+    <div style="font-size:13px;font-weight:700">출국 준비 체크리스트</div>
+    <div class="prog-wrap" style="margin-top:8px"><div class="prog-bar" style="width:${pct}%"></div></div>
+    <div style="font-size:11px;color:#8BBDE0;margin-top:6px">${pct}% 완료 &nbsp;·&nbsp; ${diff>0?`출발까지 D-${diff}`:diff===0?"오늘 출발!":"출발 완료 🎉"}</div>
+  </div>
+  ${catsHtml}
+  <button class="add-btn secondary" onclick="state.showAddCat=!state.showAddCat;state.addItemCatIdx=null;renderContent()" style="margin-top:6px">+ 새 카테고리 추가</button>
+  ${addCatForm}`;
+}
+
+/* ── Actions ── */
+function moveFin(d){const i=MONTHS.indexOf(state.finM),n=i+d;if(n>=0&&n<MONTHS.length){state.finM=MONTHS[n];renderContent();}}
+function moveCal(d){const i=MONTHS.indexOf(state.calM),n=i+d;if(n>=0&&n<MONTHS.length){state.calM=MONTHS[n];renderContent();}}
+
+function upFin(field,val){
+  if(!state.finance[state.finM]) state.finance[state.finM]={};
+  state.finance[state.finM][field]=val; saveLocal(); renderContent();
+}
+
+function addEvent(){
+  const date=document.getElementById("ev-date")?.value;
+  const title=document.getElementById("ev-title")?.value;
+  const type=document.getElementById("ev-type")?.value;
+  if(!date||!title) return;
+  state.events.push({id:"e"+Date.now(),date,title,type,color:TYPE_COLORS[type]||"#C85C3A"});
+  state.showEv=false; state.newEv={date:"",title:"",type:"personal"};
+  renderContent();
+}
+
+function addTravel(){
+  const dest=document.getElementById("tr-dest")?.value;
+  const start=document.getElementById("tr-start")?.value;
+  if(!dest||!start) return;
+  state.travels.push({
+    id:"t"+Date.now(), dest, start,
+    end:document.getElementById("tr-end")?.value||"",
+    usd:document.getElementById("tr-usd")?.value||"0",
+    note:document.getElementById("tr-note")?.value||""
+  });
+  state.showTr=false; state.newTr={dest:"",start:"",end:"",usd:"",note:""};
+  saveLocal(); renderContent();
+}
+
+function removeTravel(id){
+  state.travels=state.travels.filter(t=>t.id!==id);
+  saveLocal(); renderContent();
+}
+
+function addWish(){
+  const name=document.getElementById("wish-name")?.value?.trim();
+  if(!name) return;
+  state.wishlist.push({
+    id:"w"+Date.now(), name,
+    note:document.getElementById("wish-note")?.value||""
+  });
+  state.showWish=false;
+  saveLocal(); renderContent();
+}
+
+function removeWish(id){
+  state.wishlist=state.wishlist.filter(w=>w.id!==id);
+  saveLocal(); renderContent();
+}
+
+function toggleCheck(id){
+  state.checks=state.checks.map(c=>c.id===id?{...c,done:!c.done}:c);
+  saveLocal(); renderContent();
+}
+
+function addCheckItem(catIdx){
+  const cat=state.catOrder[catIdx];
+  const text=document.getElementById("new-item-text")?.value?.trim();
+  if(!text) return;
+  state.checks.push({id:Date.now(),cat,text,done:false});
+  state.addItemCatIdx=null;
+  saveLocal(); renderContent();
+}
+
+function saveCheckItem(id){
+  const text=document.getElementById("edit-item-"+id)?.value?.trim();
+  if(!text) return;
+  state.checks=state.checks.map(c=>c.id===id?{...c,text}:c);
+  state.editCheckId=null;
+  saveLocal(); renderContent();
+}
+
+function deleteCheckItem(id){
+  if(!confirm("이 항목을 삭제할까요?")) return;
+  state.checks=state.checks.filter(c=>c.id!==id);
+  saveLocal(); renderContent();
+}
+
+function addCat(){
+  const name=document.getElementById("new-cat-name")?.value?.trim();
+  if(!name||state.catOrder.includes(name)) return;
+  state.catOrder.push(name);
+  state.showAddCat=false;
+  saveLocal(); renderContent();
+}
+
+function deleteCat(idx){
+  const cat=state.catOrder[idx];
+  const itemCount=state.checks.filter(c=>c.cat===cat).length;
+  const msg=itemCount>0?`"${cat}" 카테고리와 항목 ${itemCount}개를 모두 삭제할까요?`:`"${cat}" 카테고리를 삭제할까요?`;
+  if(!confirm(msg)) return;
+  state.checks=state.checks.filter(c=>c.cat!==cat);
+  state.catOrder.splice(idx,1);
+  saveLocal(); renderContent();
+}
+
+/* ── Init ── */
+loadLocal();
+document.getElementById("d-day").textContent=getDday();
+updateRateDisplay();
+renderContent();
+
+fetch("https://api.frankfurter.app/latest?from=USD&to=KRW")
+  .then(r=>r.json())
+  .then(d=>{state.rate=Math.round(d.rates.KRW);state.rateDate=d.date+" (ECB)";updateRateDisplay();if(state.tab===0)renderContent();})
+  .catch(()=>{state.rateDate="수동 입력 가능 (✏️ 클릭)";updateRateDisplay();});
+</script>
+</body>
+</html>
