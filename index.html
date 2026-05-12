@@ -249,7 +249,7 @@ let state={
   addItemCatIdx:null,
   showAddCat:false,
   showEv:false, newEv:{date:"",title:"",type:"personal"},
-  showTr:false, newTr:{dest:"",start:"",end:"",usd:"",note:""},
+  showTr:false, newTr:{dest:"",start:"",end:"",amount:"",currency:"USD",note:""},
   showWish:false,
 };
 
@@ -299,6 +299,28 @@ function calcFin(m){
   return{d,sg,yn,rent,living,korF,trE,income:sg+yn,expense:rent+living+korF+trE};
 }
 
+/* ── Travel amount helpers ── */
+function travelAmtKRW(t){
+  const amt=parseFloat(t.amount??t.usd)||0;
+  const cur=t.currency||"USD";
+  return cur==="KRW" ? amt : amt*state.rate;
+}
+function travelAmtUSD(t){
+  const amt=parseFloat(t.amount??t.usd)||0;
+  const cur=t.currency||"USD";
+  return cur==="KRW" ? amt/state.rate : amt;
+}
+function travelMainDisplay(t){
+  const amt=parseFloat(t.amount??t.usd)||0;
+  const cur=t.currency||"USD";
+  return cur==="KRW" ? `₩${fmt(amt,0)}` : `$${fmt(amt,0)}`;
+}
+function travelSubDisplay(t){
+  const amt=parseFloat(t.amount??t.usd)||0;
+  const cur=t.currency||"USD";
+  return cur==="KRW" ? `≈ $${fmt(amt/state.rate,0)}` : `≈ ${fmt(amt*state.rate)}원`;
+}
+
 function updateRateDisplay(){
   const el=document.getElementById("rate-display");
   if(el) el.textContent=`1 USD = ${fmt(state.rate)} KRW`;
@@ -326,7 +348,7 @@ let mapInstance=null;
 async function getCoords(name){
   if(state.geoCache[name]) return state.geoCache[name];
   try{
-    await new Promise(r=>setTimeout(r,350)); // Nominatim rate limit
+    await new Promise(r=>setTimeout(r,350));
     const res=await fetch(
       `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(name)}&limit=1`,
       {headers:{"Accept-Language":"en","User-Agent":"MissouriLifeManager/1.0"}}
@@ -380,9 +402,10 @@ async function initTravelMap(){
     const c=await getCoords(t.dest);
     if(c){
       allCoords.push([c.lat,c.lng]);
+      const mainAmt=travelMainDisplay(t);
       L.marker([c.lat,c.lng],{icon:visitedIcon})
         .addTo(mapInstance)
-        .bindPopup(`<b>✅ ${t.dest}</b><br>${t.start}${t.end&&t.end!==t.start?` ~ ${t.end}`:""}<br><span style="color:#16A34A;font-weight:700">$${fmt(t.usd,0)}</span>${t.note?`<br><span style="color:#666">${t.note}</span>`:""}`);
+        .bindPopup(`<b>✅ ${t.dest}</b><br>${t.start}${t.end&&t.end!==t.start?` ~ ${t.end}`:""}<br><span style="color:#16A34A;font-weight:700">${mainAmt}</span>${t.note?`<br><span style="color:#666">${t.note}</span>`:""}`);
     }
   }
 
@@ -558,7 +581,9 @@ function renderSchedule(){
 
 /* ── Travel ── */
 function renderTravel(){
-  const total=state.travels.reduce((s,t)=>s+(parseFloat(t.usd)||0),0);
+  // 누적 총액 — 모두 USD 기준으로 합산
+  const totalUSD=state.travels.reduce((s,t)=>s+travelAmtUSD(t),0);
+
   const trForm=state.showTr?`
     <div class="form-box">
       <input class="f-inp" id="tr-dest" placeholder="목적지 (예: Chicago, IL)" value="${state.newTr.dest}"/>
@@ -566,7 +591,13 @@ function renderTravel(){
         <input class="f-inp" type="date" id="tr-start" value="${state.newTr.start}" style="flex:1"/>
         <input class="f-inp" type="date" id="tr-end" value="${state.newTr.end}" style="flex:1"/>
       </div>
-      <div class="i-wrap"><span class="prefix">$</span><input class="inp" type="number" id="tr-usd" placeholder="총 지출" value="${state.newTr.usd}"/></div>
+      <div class="i-wrap">
+        <select id="tr-currency" style="padding:0 10px;background:#EEF3FA;color:#6B88A8;border:none;border-right:1px solid #C8D8E8;font-size:12px;font-weight:700;font-family:Verdana,sans-serif;cursor:pointer" onchange="state.newTr.currency=this.value;renderContent()">
+          <option value="USD" ${state.newTr.currency==="USD"?"selected":""}>$ USD</option>
+          <option value="KRW" ${state.newTr.currency==="KRW"?"selected":""}>₩ KRW</option>
+        </select>
+        <input class="inp" type="number" id="tr-amount" placeholder="총 지출" value="${state.newTr.amount}"/>
+      </div>
       <input class="f-inp" id="tr-note" placeholder="메모 (숙소·교통·입장료 등)" value="${state.newTr.note}"/>
       <div class="row2">
         <button class="save-btn" onclick="addTravel()">저장</button>
@@ -599,8 +630,8 @@ function renderTravel(){
 
   <!-- 여행 기록 -->
   <div class="banner">
-    <div style="font-size:11px;color:#8BBDE0;margin-bottom:4px">🌍 누적 여행 지출</div>
-    <div style="font-weight:700;font-size:21px">$${fmt(total,0)} <span style="font-size:13px;font-weight:400;color:#8BBDE0">≈ ${fmt(total*state.rate)}원</span></div>
+    <div style="font-size:11px;color:#8BBDE0;margin-bottom:4px">🌍 누적 여행 지출 (USD 환산 합계)</div>
+    <div style="font-weight:700;font-size:21px">$${fmt(totalUSD,0)} <span style="font-size:13px;font-weight:400;color:#8BBDE0">≈ ${fmt(totalUSD*state.rate)}원</span></div>
     <div style="font-size:11px;color:#8BBDE0;margin-top:3px">총 ${state.travels.length}번의 여행 기록</div>
   </div>
   <button class="add-btn" style="margin-bottom:12px" onclick="state.showTr=!state.showTr;if(state.showTr)state.showWish=false;renderContent()">+ 여행 기록 추가</button>
@@ -611,11 +642,11 @@ function renderTravel(){
       <button class="del-btn" onclick="removeTravel('${t.id}')">×</button>
       <div style="display:flex;justify-content:space-between;align-items:center;padding-right:24px">
         <div style="font-weight:700;font-size:15px">✅ ${t.dest}</div>
-        <div style="font-weight:700;color:#16A34A;font-size:15px">$${fmt(t.usd,0)}</div>
+        <div style="font-weight:700;color:#16A34A;font-size:15px">${travelMainDisplay(t)}</div>
       </div>
       <div style="font-size:11px;color:#9AB0C8;margin-top:3px">${t.start}${t.end&&t.end!==t.start?` ~ ${t.end}`:""}</div>
       ${t.note?`<div style="font-size:12.5px;color:#4A6785;margin-top:6px">${t.note}</div>`:""}
-      <div style="font-size:11px;color:#9AB0C8;margin-top:4px">≈ ${fmt((parseFloat(t.usd)||0)*state.rate)}원</div>
+      <div style="font-size:11px;color:#9AB0C8;margin-top:4px">${travelSubDisplay(t)}</div>
       <a href="https://www.google.com/maps/search/${encodeURIComponent(t.dest)}" target="_blank" class="map-btn">🗺 Google Maps</a>
     </div>`).join("")}
 
@@ -633,6 +664,7 @@ function renderTravel(){
       <div style="flex:1;padding-right:20px">
         <div style="font-weight:700;font-size:13.5px;color:#1C3354">${w.name}</div>
         ${w.note?`<div style="font-size:11.5px;color:#78716C;margin-top:3px">${w.note}</div>`:""}
+        <a href="https://www.google.com/maps/search/${encodeURIComponent(w.name)}" target="_blank" class="map-btn" style="margin-top:6px">🗺 Google Maps</a>
       </div>
       <button class="del-btn" onclick="removeWish('${w.id}')">×</button>
     </div>`).join("")}
@@ -744,21 +776,36 @@ function addEvent(){
 }
 
 function addTravel(){
-  const dest=document.getElementById("tr-dest")?.value;
+  const dest=document.getElementById("tr-dest")?.value?.trim();
   const start=document.getElementById("tr-start")?.value;
   if(!dest||!start) return;
-  state.travels.push({
-    id:"t"+Date.now(), dest, start,
-    end:document.getElementById("tr-end")?.value||"",
-    usd:document.getElementById("tr-usd")?.value||"0",
-    note:document.getElementById("tr-note")?.value||""
+  const currency=document.getElementById("tr-currency")?.value||"USD";
+  const amount=document.getElementById("tr-amount")?.value||"0";
+  const end=document.getElementById("tr-end")?.value||"";
+  const note=document.getElementById("tr-note")?.value||"";
+  const tId="t"+Date.now();
+
+  state.travels.push({id:tId, dest, start, end, amount, currency, note});
+
+  // ✅ 스케줄 탭 자동 연동
+  const evTitle=end&&end!==start?`✈️ ${dest} (~${end})` :`✈️ ${dest}`;
+  state.events.push({
+    id:"tr_ev_"+tId,
+    date:start,
+    title:evTitle,
+    type:"personal",
+    color:TYPE_COLORS["personal"]
   });
-  state.showTr=false; state.newTr={dest:"",start:"",end:"",usd:"",note:""};
+
+  state.showTr=false;
+  state.newTr={dest:"",start:"",end:"",amount:"",currency:"USD",note:""};
   saveLocal(); renderContent();
 }
 
 function removeTravel(id){
   state.travels=state.travels.filter(t=>t.id!==id);
+  // 연동된 스케줄 이벤트도 함께 삭제
+  state.events=state.events.filter(e=>e.id!=="tr_ev_"+id);
   saveLocal(); renderContent();
 }
 
