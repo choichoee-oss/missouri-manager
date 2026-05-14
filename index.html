@@ -7,155 +7,220 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#EBF6FF;--card:#FFFFFF;--text:#0A2A54;--muted:#3D7AB0;
-  --light:#82B8DC;--accent:#0D72C6;--accent-pale:#DCF0FF;
-  --border:#B8DDF5;--success:#0F7A4A;--danger:#C03030;
-  --shadow:0 2px 20px rgba(10,42,84,.08);--r:14px;
+  --bg:#F0F3F7;
+  --card:#FFFFFF;
+  --text:#0D1E3D;
+  --muted:#6B7C93;
+  --light:#A8B8CC;
+  --border:#E2EAF2;
+  --navy:#0D1E3D;
+  --navy2:#162844;
+  --blue:#1557B0;
+  --blue-pale:#EBF3FF;
+  --teal:#00957A;
+  --teal-pale:#E6F7F4;
+  --amber:#E8920A;
+  --amber-pale:#FEF6E8;
+  --coral:#D94040;
+  --coral-pale:#FEEDED;
+  --purple:#5B4FD4;
+  --purple-pale:#EFEDFC;
+  --shadow-sm:0 1px 4px rgba(13,30,61,.06);
+  --shadow:0 2px 12px rgba(13,30,61,.08);
+  --shadow-md:0 4px 24px rgba(13,30,61,.11);
+  --r:12px;--r-sm:8px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Plus Jakarta Sans','Malgun Gothic','Apple SD Gothic Neo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
-input,select,textarea{outline:none;font-family:'Plus Jakarta Sans','Malgun Gothic',sans-serif}
+body{font-family:'DM Sans','Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;font-size:14px}
+input,select,textarea{outline:none;font-family:'DM Sans','Apple SD Gothic Neo',sans-serif}
 button:disabled{opacity:.3;cursor:not-allowed!important}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-.app{max-width:640px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+.app{max-width:680px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
 
 /* ── Header ── */
-.hdr{background:linear-gradient(180deg,rgba(5,22,55,.68) 0%,rgba(8,38,82,.80) 100%),url('data:image/jpeg;base64,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') center 35%/cover no-repeat;color:white;padding:22px 20px 18px;flex-shrink:0;position:relative;overflow:hidden}
-.hdr::before{content:'MISSOURI';position:absolute;bottom:-10px;right:-6px;font-family:'Playfair Display',serif;font-size:78px;font-style:italic;color:rgba(255,255,255,.04);pointer-events:none;line-height:1;white-space:nowrap;letter-spacing:-2px}
-.htop{display:flex;justify-content:space-between;align-items:flex-start}
-.app-name{font-family:'Playfair Display',serif;font-size:23px;font-weight:700;color:#fff;letter-spacing:-.3px}
-.app-sub{font-size:10px;color:rgba(255,255,255,.35);margin-top:3px;font-weight:400;letter-spacing:.8px}
-.badge{background:var(--accent);border-radius:8px;padding:6px 12px;font-size:11px;font-weight:800;letter-spacing:1.5px;color:white}
-.d-badge{margin-top:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:7px 16px;font-size:11px;display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,.6);font-weight:500}
+.hdr{background:var(--navy);padding:0;flex-shrink:0;position:relative;overflow:hidden}
+.hdr-top{padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between}
+.logo-area{display:flex;align-items:center;gap:10px}
+.logo-mark{width:36px;height:36px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:18px;color:white;font-style:italic;flex-shrink:0}
+.logo-text{color:white}
+.logo-title{font-family:'DM Serif Display',serif;font-size:20px;color:white;letter-spacing:-.3px;line-height:1.1}
+.logo-sub{font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.8px;font-weight:500;margin-top:2px}
+.dday-pill{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:6px 14px;font-size:11px;color:rgba(255,255,255,.65);font-weight:500;white-space:nowrap}
 
-/* ── Rate Bar ── */
-.rate-bar{background:#07193E;padding:9px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.05)}
-.rate-left{font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.5px}
-.rate-input{background:transparent;border:none;border-bottom:1.5px solid var(--accent);color:#7DD8FF;font-size:14px;font-weight:700;width:85px;text-align:center;font-family:'Plus Jakarta Sans',sans-serif;padding:0 2px}
-.rate-edit-btn{background:none;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.38);border-radius:6px;padding:3px 10px;font-size:10px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif}
+/* ── Rate strip ── */
+.rate-strip{padding:12px 24px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(255,255,255,.06);margin-top:14px}
+.rate-lbl{font-size:10.5px;color:rgba(255,255,255,.35);letter-spacing:.5px;font-weight:500}
+.rate-val{font-size:16px;font-weight:700;color:#5EC9FF;letter-spacing:-.3px}
+.rate-edit-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.5);border-radius:6px;padding:4px 10px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.rate-edit-btn:hover{background:rgba(255,255,255,.14);color:rgba(255,255,255,.8)}
+.rate-input-inline{background:transparent;border:none;border-bottom:2px solid #5EC9FF;color:#5EC9FF;font-size:15px;font-weight:700;width:90px;text-align:center;font-family:'DM Sans',sans-serif;padding:0 4px}
 
-/* ── Tab Bar ── */
-.tab-bar{background:#07193E;display:flex;flex-shrink:0;padding:0 6px;border-bottom:1px solid rgba(255,255,255,.05)}
-.tab-btn{flex:1;padding:13px 2px 11px;background:transparent;border:none;border-bottom:2.5px solid transparent;color:rgba(255,255,255,.3);font-size:10px;cursor:pointer;font-family:'Plus Jakarta Sans','Malgun Gothic',sans-serif;font-weight:600;white-space:nowrap;transition:all .22s ease;letter-spacing:.2px;margin-bottom:-1px}
-.tab-btn:hover{color:rgba(255,255,255,.6)}
-.tab-btn.active{color:#7DD8FF;border-bottom-color:#0D72C6}
+/* ── Tab bar ── */
+.tab-bar{background:var(--navy2);display:flex;flex-shrink:0;padding:0 12px;gap:2px;border-top:1px solid rgba(255,255,255,.05)}
+.tab-btn{flex:1;padding:13px 4px 12px;background:transparent;border:none;border-bottom:2.5px solid transparent;color:rgba(255,255,255,.35);font-size:10.5px;cursor:pointer;font-family:'DM Sans','Apple SD Gothic Neo',sans-serif;font-weight:600;white-space:nowrap;transition:all .2s;letter-spacing:.2px;margin-bottom:-1px}
+.tab-btn:hover{color:rgba(255,255,255,.65)}
+.tab-btn.active{color:#5EC9FF;border-bottom-color:#1557B0}
 
 /* ── Content ── */
-.content{padding:18px;flex:1;overflow-y:auto}
+.content{padding:20px;flex:1;overflow-y:auto}
+
+/* ── Section header ── */
+.sec-hdr{display:flex;align-items:center;gap:8px;margin-bottom:14px;margin-top:6px}
+.sec-hdr::before{content:'▸';color:var(--blue);font-size:12px}
+.sec-hdr-txt{font-weight:700;font-size:13.5px;color:var(--text)}
+.sec-hdr-line{flex:1;height:1px;background:var(--border)}
 
 /* ── Cards ── */
-.card{background:var(--card);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);border:1px solid var(--border);margin-bottom:14px}
-.card-title{font-weight:700;font-size:10.5px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);color:var(--muted);letter-spacing:1.2px;text-transform:uppercase}
+.card{background:var(--card);border-radius:var(--r);padding:20px;box-shadow:var(--shadow-sm);border:1px solid var(--border);margin-bottom:14px}
+.card-title{font-weight:700;font-size:10.5px;color:var(--muted);letter-spacing:1.3px;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:6px}
 
-/* ── Banner ── */
-.banner{background:#061830;color:white;border-radius:var(--r);padding:18px 20px;margin-bottom:14px}
+/* ── Metric tiles ── */
+.metric-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.metric-tile{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--shadow-sm);text-align:center}
+.metric-tile .m-lbl{font-size:9.5px;color:var(--muted);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.metric-tile .m-val{font-family:'DM Serif Display',serif;font-size:22px;color:var(--text);line-height:1.1}
+.metric-tile .m-sub{font-size:10px;color:var(--muted);margin-top:4px}
+
+/* ── Banner strip ── */
+.banner{background:var(--navy);color:white;border-radius:var(--r);padding:18px 20px;margin-bottom:14px;position:relative;overflow:hidden}
+.banner::after{content:'';position:absolute;right:-20px;top:-20px;width:120px;height:120px;background:rgba(255,255,255,.03);border-radius:50%}
+.banner-lbl{font-size:10px;color:rgba(255,255,255,.4);letter-spacing:.8px;font-weight:600;text-transform:uppercase;margin-bottom:6px}
+.banner-val{font-family:'DM Serif Display',serif;font-size:28px;color:white;letter-spacing:-.5px}
+.banner-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:5px}
 
 /* ── Month Nav ── */
-.mnav{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:18px}
-.mn-btn{background:var(--accent);color:white;border:none;border-radius:8px;width:34px;height:34px;font-size:18px;cursor:pointer;font-weight:700;display:flex;align-items:center;justify-content:center;transition:opacity .2s}
-.mn-btn:hover{opacity:.8}
-.mn-label{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;min-width:130px;text-align:center;color:var(--text)}
+.mnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;box-shadow:var(--shadow-sm)}
+.mn-btn{background:var(--blue-pale);color:var(--blue);border:none;border-radius:var(--r-sm);width:32px;height:32px;font-size:16px;cursor:pointer;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.mn-btn:hover{background:var(--blue);color:white}
+.mn-btn:disabled{opacity:.3}
+.mn-label{font-family:'DM Serif Display',serif;font-size:19px;color:var(--text);text-align:center;flex:1}
 
 /* ── Inputs ── */
 .field{margin-bottom:14px}
-.lbl{display:block;font-size:9.5px;color:var(--light);margin-bottom:5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase}
-.i-wrap{display:flex;align-items:stretch;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .2s;background:white}
-.i-wrap:focus-within{border-color:var(--accent)}
-.prefix{padding:0 12px;background:var(--bg);color:var(--muted);font-size:13px;display:flex;align-items:center;border-right:1.5px solid var(--border);min-width:36px;justify-content:center;font-weight:700}
-.inp{flex:1;border:none;padding:11px 14px;font-size:14px;background:transparent;font-family:'Plus Jakarta Sans','Malgun Gothic',sans-serif;width:100%;color:var(--text)}
-.hint{font-size:10.5px;color:var(--light);margin-top:4px}
-.divider{border-top:1.5px dashed var(--border);margin-top:12px;padding-top:12px;font-weight:700;font-size:13px;color:var(--text)}
-
-/* ── Summary ── */
-.sum-card{border-radius:var(--r);padding:16px;border:1.5px solid}
-.sum-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;margin-top:10px}
-.sum-item{display:flex;flex-direction:column;gap:4px;font-size:11px}
+.lbl{display:block;font-size:10px;color:var(--muted);margin-bottom:6px;font-weight:600;letter-spacing:1px;text-transform:uppercase}
+.i-wrap{display:flex;align-items:stretch;border:1.5px solid var(--border);border-radius:var(--r-sm);overflow:hidden;transition:border-color .2s;background:white}
+.i-wrap:focus-within{border-color:var(--blue)}
+.prefix{padding:0 12px;background:#F5F7FA;color:var(--muted);font-size:13px;display:flex;align-items:center;border-right:1.5px solid var(--border);min-width:38px;justify-content:center;font-weight:700}
+.inp{flex:1;border:none;padding:10px 14px;font-size:14px;background:transparent;font-family:'DM Sans','Apple SD Gothic Neo',sans-serif;width:100%;color:var(--text)}
+.hint{font-size:10.5px;color:var(--teal);margin-top:4px;font-weight:500}
+.divider-line{border-top:1.5px dashed var(--border);margin:14px 0 10px}
+.total-line{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:14px;color:var(--text);padding:10px 14px;background:var(--bg);border-radius:var(--r-sm)}
 
 /* ── Preset badge ── */
-.preset-badge{display:inline-block;background:var(--accent-pale);color:var(--accent);border-radius:6px;padding:3px 9px;font-size:9.5px;font-weight:700;margin-bottom:10px;letter-spacing:.8px;text-transform:uppercase}
+.preset-badge{display:inline-flex;align-items:center;gap:5px;background:var(--teal-pale);color:var(--teal);border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700;margin-bottom:12px;letter-spacing:.5px}
+
+/* ── Seonggok table ── */
+.sg-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.sg-table th{text-align:left;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;padding:6px 10px;border-bottom:2px solid var(--border);font-weight:600}
+.sg-table td{padding:10px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+.sg-table tr:last-child td{border-bottom:none}
+.sg-table tr.active-row td{background:var(--blue-pale)}
+.sg-table tr.active-row td:first-child{border-left:3px solid var(--blue)}
+
+/* ── Balance card ── */
+.bal-card{border-radius:var(--r);padding:18px;border:1.5px solid;margin-bottom:14px}
 
 /* ── Calendar ── */
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
-.day-hdr{text-align:center;font-size:9.5px;font-weight:700;padding:5px 0;color:var(--light);letter-spacing:.5px}
-.cal-cell{border-radius:6px;padding:3px 2px;min-height:52px;background:white;border:1px solid var(--border)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.day-hdr{text-align:center;font-size:9.5px;font-weight:700;padding:6px 0;color:var(--light);letter-spacing:.5px}
+.cal-cell{border-radius:6px;padding:4px 3px;min-height:54px;background:white;border:1px solid var(--border);transition:border-color .2s}
+.cal-cell:hover{border-color:var(--blue)}
 .day-n{font-size:10px;text-align:center;margin-bottom:2px;font-weight:600}
-.e-dot{border-radius:3px;padding:1px 3px;color:white;font-size:7px;margin-bottom:1px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:1.5}
+.e-dot{border-radius:4px;padding:1px 4px;color:white;font-size:7px;margin-bottom:1px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:1.6}
 
 /* ── Buttons ── */
-.add-btn{width:100%;padding:13px;background:#061830;color:white;border:none;border-radius:var(--r);font-size:13px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans','Malgun Gothic',sans-serif;transition:opacity .2s;letter-spacing:.5px}
-.add-btn:hover{opacity:.85}
-.add-btn.secondary{background:var(--accent)}
-.form-box{background:white;border-radius:var(--r);padding:18px;margin:8px 0 14px;box-shadow:var(--shadow);border:1px solid var(--border);display:flex;flex-direction:column;gap:10px}
-.f-inp{padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:'Plus Jakarta Sans','Malgun Gothic',sans-serif;width:100%;background:white;color:var(--text)}
-.f-inp:focus{border-color:var(--accent)}
+.btn-primary{width:100%;padding:12px;background:var(--navy);color:white;border:none;border-radius:var(--r-sm);font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans','Apple SD Gothic Neo',sans-serif;transition:all .2s;letter-spacing:.3px}
+.btn-primary:hover{background:var(--navy2)}
+.btn-accent{background:var(--blue);color:white}
+.btn-accent:hover{opacity:.9;background:var(--blue)}
+.btn-amber{background:var(--amber);color:white}
+
+.form-box{background:var(--card);border-radius:var(--r);padding:18px;margin:8px 0 14px;box-shadow:var(--shadow-md);border:1.5px solid var(--blue);display:flex;flex-direction:column;gap:10px}
+.f-inp{padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:'DM Sans','Apple SD Gothic Neo',sans-serif;width:100%;background:white;color:var(--text);transition:border-color .2s}
+.f-inp:focus{border-color:var(--blue)}
 .row2{display:flex;gap:8px}
-.save-btn{flex:1;padding:12px;background:#061830;color:white;border:none;border-radius:10px;cursor:pointer;font-weight:700;font-family:'Plus Jakarta Sans','Malgun Gothic',sans-serif}
-.cancel-btn{flex:1;padding:12px;background:var(--bg);color:var(--muted);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-family:'Plus Jakarta Sans','Malgun Gothic',sans-serif}
+.save-btn{flex:1;padding:11px;background:var(--navy);color:white;border:none;border-radius:var(--r-sm);cursor:pointer;font-weight:700;font-family:'DM Sans','Apple SD Gothic Neo',sans-serif;transition:all .2s}
+.save-btn:hover{background:var(--blue)}
+.cancel-btn{flex:1;padding:11px;background:var(--bg);color:var(--muted);border:1.5px solid var(--border);border-radius:var(--r-sm);cursor:pointer;font-family:'DM Sans','Apple SD Gothic Neo',sans-serif;transition:all .2s}
+.cancel-btn:hover{border-color:var(--muted)}
 
 /* ── Event list ── */
-.ev-list{background:white;border-radius:var(--r);padding:16px;margin-top:10px;border:1px solid var(--border)}
-.ev-item{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border)}
+.ev-list{background:var(--card);border-radius:var(--r);padding:16px;margin-top:10px;border:1px solid var(--border);box-shadow:var(--shadow-sm)}
+.ev-item{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--border)}
 .ev-item:last-child{border:none}
-.ev-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0}
-.legend{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:12px}
-.leg-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted)}
+.ev-bar{width:3px;border-radius:2px;min-height:32px;flex-shrink:0}
+.legend{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--muted)}
 
 /* ── Travel ── */
-.tr-card{background:white;border-radius:var(--r);padding:16px;box-shadow:var(--shadow);border:1px solid var(--border);margin-bottom:10px;position:relative}
-.map-btn{display:inline-block;margin-top:8px;padding:5px 14px;background:var(--bg);color:var(--accent);border-radius:20px;font-size:10.5px;font-weight:700;text-decoration:none;border:1px solid var(--border)}
-.del-btn{position:absolute;top:12px;right:12px;background:none;border:none;color:var(--light);font-size:18px;cursor:pointer;padding:2px 6px;border-radius:4px;line-height:1}
-.del-btn:hover{color:var(--accent);background:#FEF2F2}
+.tr-card{background:var(--card);border-radius:var(--r);padding:16px;box-shadow:var(--shadow-sm);border:1px solid var(--border);margin-bottom:10px;position:relative}
+.map-btn{display:inline-flex;align-items:center;gap:4px;margin-top:8px;padding:5px 12px;background:var(--bg);color:var(--blue);border-radius:20px;font-size:10.5px;font-weight:700;text-decoration:none;border:1px solid var(--border);transition:all .2s}
+.map-btn:hover{background:var(--blue-pale);border-color:var(--blue)}
+.del-btn{position:absolute;top:12px;right:12px;background:none;border:1px solid var(--border);color:var(--light);font-size:14px;cursor:pointer;padding:3px 8px;border-radius:6px;line-height:1;transition:all .2s}
+.del-btn:hover{color:var(--coral);background:var(--coral-pale);border-color:var(--coral)}
 
 /* ── Map ── */
-#travel-map{height:300px;border-radius:10px;overflow:hidden}
-.leaflet-popup-content b{font-family:'Plus Jakarta Sans',sans-serif;font-size:12px}
-.leaflet-popup-content{font-family:'Plus Jakarta Sans','Malgun Gothic',sans-serif;font-size:11px;line-height:1.6}
-.map-legend-row{display:flex;gap:16px;margin:8px 0 10px;font-size:11px;color:var(--muted);flex-wrap:wrap}
-.map-legend-row span{display:flex;align-items:center;gap:5px}
-.map-dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0}
+#travel-map{height:300px;border-radius:var(--r-sm);overflow:hidden;border:1px solid var(--border)}
+.leaflet-popup-content b{font-family:'DM Sans',sans-serif;font-size:12px}
+.leaflet-popup-content{font-family:'DM Sans','Apple SD Gothic Neo',sans-serif;font-size:11px;line-height:1.6}
+.map-stat-row{display:flex;gap:14px;margin:8px 0 10px;font-size:11px;color:var(--muted);flex-wrap:wrap}
+.map-stat-row span{display:flex;align-items:center;gap:5px}
+.map-dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex-shrink:0}
 
-/* ── Wish card ── */
-.wish-card{background:#FDFAF4;border:1.5px solid #EDE3C8;border-radius:12px;padding:14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px;position:relative}
+/* ── Wish ── */
+.wish-card{background:#FDFAF4;border:1.5px solid #EDE3C8;border-radius:var(--r);padding:14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px;position:relative}
 .wish-card .del-btn{top:8px;right:8px}
 
 /* ── Checklist ── */
-.prog-wrap{background:rgba(255,255,255,.12);border-radius:4px;height:5px;overflow:hidden;margin-top:10px}
-.prog-bar{height:100%;background:linear-gradient(90deg,#5DD4FF 0%,var(--accent) 100%);border-radius:4px;transition:width .4s ease}
-.ch-cat{margin-bottom:16px}
-.ch-cat-title{font-weight:700;font-size:10px;color:var(--text);margin-bottom:6px;padding-bottom:6px;border-bottom:2px solid var(--accent);letter-spacing:1px;text-transform:uppercase}
-.ch-item{display:flex;align-items:center;gap:10px;padding:10px 2px;cursor:pointer;border-bottom:1px solid var(--border);user-select:none}
+.prog-bg{background:var(--border);border-radius:4px;height:5px;overflow:hidden;margin-top:10px}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--teal) 0%,var(--blue) 100%);border-radius:4px;transition:width .4s ease}
+.ch-cat{margin-bottom:18px}
+.ch-cat-hdr{font-weight:700;font-size:11px;color:var(--text);padding:8px 12px;letter-spacing:.8px;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:var(--r-sm) var(--r-sm) 0 0;border:1.5px solid var(--border);border-bottom:none}
+.ch-body{border:1.5px solid var(--border);border-radius:0 0 var(--r-sm) var(--r-sm);overflow:hidden;background:var(--card)}
+.ch-item{display:flex;align-items:center;border-bottom:1px solid var(--border)}
 .ch-item:last-child{border:none}
-.ch-box{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.ch-check-area{display:flex;align-items:center;gap:10px;flex:1;padding:10px 14px;cursor:pointer;user-select:none;min-width:0}
+.ch-box{width:20px;height:20px;border-radius:5px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
 .empty{text-align:center;padding:36px 20px;color:var(--light);line-height:2;font-size:13px}
 
-@keyframes fadeSlideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-#main-content>*{animation:fadeSlideUp .28s ease both}
+/* ── Change badge ── */
+.badge-pos{display:inline-block;background:#DCF5E9;color:#059669;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700}
+.badge-neg{display:inline-block;background:#FEE2E2;color:#DC2626;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+#main-content>*{animation:fadeUp .25s ease both}
 </style>
 </head>
 <body>
 <div class="app">
+
+  <!-- ── Header ── -->
   <div class="hdr">
-    <div class="htop">
-      <div>
-        <div class="app-name">Missouri Life Manager</div>
-        <div class="app-sub">미주리 라이프 매니저 &nbsp;·&nbsp; 2026.07 – 2027.08</div>
+    <div class="hdr-top">
+      <div class="logo-area">
+        <div class="logo-mark">M</div>
+        <div class="logo-text">
+          <div class="logo-title">Missouri Life Manager</div>
+          <div class="logo-sub">2026.07 – 2027.08 &nbsp;·&nbsp; Seonggok Fellowship</div>
+        </div>
       </div>
-      <div class="badge">🦅 MO</div>
+      <div class="dday-pill" id="d-day">⏳ 계산중…</div>
     </div>
-    <div class="d-badge" id="d-day">⏳ 계산중…</div>
+    <div class="rate-strip">
+      <div>
+        <div class="rate-lbl">💱 USD → KRW &nbsp;<span id="rate-date" style="opacity:.6;font-size:9.5px"></span></div>
+        <div style="margin-top:3px">
+          <span id="rate-display" class="rate-val"></span>
+        </div>
+      </div>
+      <button class="rate-edit-btn" onclick="toggleRateEdit()">✏️ 환율 수정</button>
+    </div>
   </div>
 
-  <div class="rate-bar">
-    <span class="rate-left">💱 USD → KRW &nbsp;<span id="rate-date" style="opacity:.7;font-size:10px"></span></span>
-    <div style="display:flex;align-items:center;gap:8px">
-      <span id="rate-display" style="font-size:15px;font-weight:700;color:#7DD8FF"></span>
-      <button class="rate-edit-btn" onclick="toggleRateEdit()">✏️ 수정</button>
-    </div>
-  </div>
-
+  <!-- ── Tab bar ── -->
   <div class="tab-bar">
     <button class="tab-btn active" onclick="switchTab(0)">💰 재무관리</button>
     <button class="tab-btn" onclick="switchTab(1)">📅 스케줄</button>
@@ -167,9 +232,9 @@ button:disabled{opacity:.3;cursor:not-allowed!important}
 </div>
 
 <script>
-const DEPARTURE = new Date("2026-08-03");
-const TYPE_COLORS = {academic:"#3A6FD8",seminar:"#7C3AED",holiday:"#15803D",personal:"#C05A2A"};
-const TYPE_LABELS = {academic:"학사",seminar:"세미나",holiday:"공휴일",personal:"개인"};
+const DEPARTURE=new Date("2026-08-03");
+const TYPE_COLORS={academic:"#1557B0",seminar:"#5B4FD4",holiday:"#00957A",personal:"#C05A2A"};
+const TYPE_LABELS={academic:"학사",seminar:"세미나",holiday:"공휴일",personal:"개인"};
 
 const MONTHS=[];
 for(let y=2026;y<=2027;y++)
@@ -249,20 +314,15 @@ const INIT_CHECKS=[
 
 /* ── State ── */
 let state={
-  tab:0, rate:1472, rateDate:"오늘 기준", editingRate:false,
-  finance:buildInitFinance(),
-  finM:"2026-07",
-  events:buildPresetEvents(),
-  calM:"2026-08",
-  travels:[], checks:JSON.parse(JSON.stringify(INIT_CHECKS)),
-  wishlist:[],
-  geoCache:{},
+  tab:0,rate:1472,rateDate:"오늘 기준",editingRate:false,
+  finance:buildInitFinance(),finM:"2026-07",
+  events:buildPresetEvents(),calM:"2026-08",
+  travels:[],checks:JSON.parse(JSON.stringify(INIT_CHECKS)),
+  wishlist:[],geoCache:{},
   catOrder:[...new Set(INIT_CHECKS.map(c=>c.cat))],
-  editCheckId:null,
-  addItemCatIdx:null,
-  showAddCat:false,
-  showEv:false, newEv:{date:"",title:"",type:"personal"},
-  showTr:false, newTr:{dest:"",start:"",end:"",amount:"",currency:"USD",note:""},
+  editCheckId:null,addItemCatIdx:null,showAddCat:false,
+  showEv:false,newEv:{date:"",title:"",type:"personal"},
+  showTr:false,newTr:{dest:"",start:"",end:"",amount:"",currency:"USD",note:""},
   showWish:false,
 };
 
@@ -270,22 +330,22 @@ let state={
 function loadLocal(){
   try{
     const d=JSON.parse(localStorage.getItem("msl_data")||"{}");
-    if(d.finance) state.finance={...buildInitFinance(),...d.finance};
-    if(d.travels) state.travels=d.travels;
-    if(d.checks)  state.checks=d.checks;
-    if(d.rate)    state.rate=d.rate;
-    if(d.wishlist) state.wishlist=d.wishlist;
-    if(d.geoCache) state.geoCache=d.geoCache;
-    if(d.catOrder) state.catOrder=d.catOrder;
-    else if(d.checks) state.catOrder=[...new Set(d.checks.map(c=>c.cat))];
+    if(d.finance)state.finance={...buildInitFinance(),...d.finance};
+    if(d.travels)state.travels=d.travels;
+    if(d.checks)state.checks=d.checks;
+    if(d.rate)state.rate=d.rate;
+    if(d.wishlist)state.wishlist=d.wishlist;
+    if(d.geoCache)state.geoCache=d.geoCache;
+    if(d.catOrder)state.catOrder=d.catOrder;
+    else if(d.checks)state.catOrder=[...new Set(d.checks.map(c=>c.cat))];
   }catch(e){}
 }
 function saveLocal(){
   try{
     localStorage.setItem("msl_data",JSON.stringify({
-      finance:state.finance, travels:state.travels,
-      checks:state.checks, rate:state.rate,
-      wishlist:state.wishlist, geoCache:state.geoCache,
+      finance:state.finance,travels:state.travels,
+      checks:state.checks,rate:state.rate,
+      wishlist:state.wishlist,geoCache:state.geoCache,
       catOrder:state.catOrder
     }));
   }catch(e){}
@@ -295,24 +355,25 @@ function saveLocal(){
 const fmt=(n,d=0)=>Number(n||0).toLocaleString("ko-KR",{maximumFractionDigits:d});
 const daysIn=(y,m)=>new Date(y,m,0).getDate();
 const firstDay=(y,m)=>new Date(y,m-1,1).getDay();
-const escapeHtml=s=>String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const esc=s=>String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const fmtMonth=m=>m.replace("-","년 ").replace(/(\d+)$/,n=>parseInt(n)+"월");
 
 function getDday(){
   const diff=Math.ceil((DEPARTURE-new Date())/86400000);
-  if(diff>0) return`✈️ 미국 출발까지 D-${diff}`;
-  if(diff===0) return"✈️ 오늘 출발이에요!";
+  if(diff>0)return`✈️ 출발까지 D-${diff}`;
+  if(diff===0)return"✈️ 오늘 출발!";
   return`🌍 미주리 생활 D+${-diff}`;
 }
 
 function getCarryover(targetM){
   const idx=MONTHS.indexOf(targetM);
-  if(idx<=0) return 0;
+  if(idx<=0)return 0;
   let carry=0;
   for(let i=0;i<idx;i++){
-    const m=MONTHS[i]; const d=state.finance[m]||{}; const r=state.rate;
-    const sg=(parseFloat(d.seonggok)||0)*r; const yn=parseFloat(d.yonhap)||0;
-    const rent=(parseFloat(d.rent)||0)*r; const living=(parseFloat(d.living)||0)*r;
-    const korF=parseFloat(d.korFixed)||0; const trE=(parseFloat(d.travelExp)||0)*r;
+    const m=MONTHS[i];const d=state.finance[m]||{};const r=state.rate;
+    const sg=(parseFloat(d.seonggok)||0)*r;const yn=parseFloat(d.yonhap)||0;
+    const rent=(parseFloat(d.rent)||0)*r;const living=(parseFloat(d.living)||0)*r;
+    const korF=parseFloat(d.korFixed)||0;const trE=(parseFloat(d.travelExp)||0)*r;
     const bal=(sg+yn+carry)-(rent+living+korF+trE);
     carry=bal>0?bal:0;
   }
@@ -320,48 +381,31 @@ function getCarryover(targetM){
 }
 
 function calcFin(m){
-  const d=state.finance[m]||{}; const r=state.rate;
-  const sg=(parseFloat(d.seonggok)||0)*r; const yn=parseFloat(d.yonhap)||0;
+  const d=state.finance[m]||{};const r=state.rate;
+  const sg=(parseFloat(d.seonggok)||0)*r;const yn=parseFloat(d.yonhap)||0;
   const carry=getCarryover(m);
-  const rent=(parseFloat(d.rent)||0)*r; const living=(parseFloat(d.living)||0)*r;
-  const korF=parseFloat(d.korFixed)||0; const trE=(parseFloat(d.travelExp)||0)*r;
+  const rent=(parseFloat(d.rent)||0)*r;const living=(parseFloat(d.living)||0)*r;
+  const korF=parseFloat(d.korFixed)||0;const trE=(parseFloat(d.travelExp)||0)*r;
   return{d,sg,yn,carry,rent,living,korF,trE,income:sg+yn+carry,expense:rent+living+korF+trE};
 }
 
-/* ── Travel amount helpers ── */
-function travelAmtKRW(t){
-  const amt=parseFloat(t.amount??t.usd)||0;
-  const cur=t.currency||"USD";
-  return cur==="KRW" ? amt : amt*state.rate;
-}
-function travelAmtUSD(t){
-  const amt=parseFloat(t.amount??t.usd)||0;
-  const cur=t.currency||"USD";
-  return cur==="KRW" ? amt/state.rate : amt;
-}
-function travelMainDisplay(t){
-  const amt=parseFloat(t.amount??t.usd)||0;
-  const cur=t.currency||"USD";
-  return cur==="KRW" ? `₩${fmt(amt,0)}` : `$${fmt(amt,0)}`;
-}
-function travelSubDisplay(t){
-  const amt=parseFloat(t.amount??t.usd)||0;
-  const cur=t.currency||"USD";
-  return cur==="KRW" ? `≈ $${fmt(amt/state.rate,0)}` : `≈ ${fmt(amt*state.rate)}원`;
-}
+function travelAmtKRW(t){const amt=parseFloat(t.amount??t.usd)||0;const cur=t.currency||"USD";return cur==="KRW"?amt:amt*state.rate;}
+function travelAmtUSD(t){const amt=parseFloat(t.amount??t.usd)||0;const cur=t.currency||"USD";return cur==="KRW"?amt/state.rate:amt;}
+function travelMainDisplay(t){const amt=parseFloat(t.amount??t.usd)||0;const cur=t.currency||"USD";return cur==="KRW"?`₩${fmt(amt,0)}`:`$${fmt(amt,0)}`;}
+function travelSubDisplay(t){const amt=parseFloat(t.amount??t.usd)||0;const cur=t.currency||"USD";return cur==="KRW"?`≈ $${fmt(amt/state.rate,0)}`:`≈ ${fmt(amt*state.rate)}원`;}
 
 function updateRateDisplay(){
   const el=document.getElementById("rate-display");
-  if(el) el.textContent=`1 USD = ${fmt(state.rate)} KRW`;
+  if(el)el.textContent=`1 USD = ${fmt(state.rate)} KRW`;
   const dt=document.getElementById("rate-date");
-  if(dt) dt.textContent=state.rateDate;
+  if(dt)dt.textContent=state.rateDate;
 }
 
 function toggleRateEdit(){
   state.editingRate=!state.editingRate;
   const display=document.getElementById("rate-display");
   if(state.editingRate){
-    display.innerHTML=`<input class="rate-input" id="rate-inp" type="number" value="${state.rate}" onchange="applyRate(this.value)" onblur="state.editingRate=false;updateRateDisplay()"/>`;
+    display.outerHTML=`<input class="rate-input-inline" id="rate-inp" type="number" value="${state.rate}" onchange="applyRate(this.value)" onblur="state.editingRate=false;updateRateDisplay()"/>`;
     document.getElementById("rate-inp")?.focus();
   }else{updateRateDisplay();}
 }
@@ -375,142 +419,137 @@ function applyRate(v){
 let mapInstance=null;
 
 async function getCoords(name){
-  if(state.geoCache[name]) return state.geoCache[name];
+  if(state.geoCache[name])return state.geoCache[name];
   try{
     await new Promise(r=>setTimeout(r,350));
-    const res=await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(name)}&limit=1`,
-      {headers:{"Accept-Language":"en","User-Agent":"MissouriLifeManager/1.0"}}
-    );
+    const res=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(name)}&limit=1`,{headers:{"Accept-Language":"en","User-Agent":"MissouriLifeManager/1.0"}});
     const data=await res.json();
     if(data.length>0){
       const coords={lat:parseFloat(data[0].lat),lng:parseFloat(data[0].lon)};
-      state.geoCache[name]=coords;
-      saveLocal();
-      return coords;
+      state.geoCache[name]=coords;saveLocal();return coords;
     }
   }catch(e){}
   return null;
 }
 
-function makeIcon(color, emoji){
+function makeIcon(color,emoji){
   return L.divIcon({
     className:"",
-    html:`<div style="
-      width:32px;height:32px;border-radius:50% 50% 50% 0;
-      transform:rotate(-45deg);
-      background:${color};
-      border:3px solid white;
-      box-shadow:0 2px 8px rgba(0,0,0,.35);
-      display:flex;align-items:center;justify-content:center;
-    "><span style="transform:rotate(45deg);font-size:13px;line-height:1">${emoji}</span></div>`,
-    iconSize:[32,32],
-    iconAnchor:[16,32],
-    popupAnchor:[0,-34]
+    html:`<div style="width:32px;height:32px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:${color};border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center"><span style="transform:rotate(45deg);font-size:13px;line-height:1">${emoji}</span></div>`,
+    iconSize:[32,32],iconAnchor:[16,32],popupAnchor:[0,-34]
   });
 }
 
 async function initTravelMap(){
   if(mapInstance){mapInstance.remove();mapInstance=null;}
   const el=document.getElementById("travel-map");
-  if(!el||typeof L==="undefined") return;
-
+  if(!el||typeof L==="undefined")return;
   mapInstance=L.map("travel-map",{zoomControl:true}).setView([39.5,-98.5],4);
-
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
-    attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
-    maxZoom:18
-  }).addTo(mapInstance);
-
-  const visitedIcon=makeIcon("#16A34A","✅");
-  const wishIcon=makeIcon("#D97706","⭐");
-
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a>',maxZoom:18}).addTo(mapInstance);
+  const visitedIcon=makeIcon("#00957A","✅");
+  const wishIcon=makeIcon("#E8920A","⭐");
   const allCoords=[];
-
   for(const t of state.travels){
     const c=await getCoords(t.dest);
     if(c){
       allCoords.push([c.lat,c.lng]);
-      const mainAmt=travelMainDisplay(t);
-      L.marker([c.lat,c.lng],{icon:visitedIcon})
-        .addTo(mapInstance)
-        .bindPopup(`<b>✅ ${t.dest}</b><br>${t.start}${t.end&&t.end!==t.start?` ~ ${t.end}`:""}<br><span style="color:#16A34A;font-weight:700">${mainAmt}</span>${t.note?`<br><span style="color:#666">${t.note}</span>`:""}`);
+      L.marker([c.lat,c.lng],{icon:visitedIcon}).addTo(mapInstance)
+        .bindPopup(`<b>✅ ${t.dest}</b><br>${t.start}${t.end&&t.end!==t.start?` ~ ${t.end}`:""}<br><span style="color:#00957A;font-weight:700">${travelMainDisplay(t)}</span>${t.note?`<br><span style="color:#666">${t.note}</span>`:""}`);
     }
   }
-
   for(const w of state.wishlist){
     const c=await getCoords(w.name);
     if(c){
       allCoords.push([c.lat,c.lng]);
-      L.marker([c.lat,c.lng],{icon:wishIcon})
-        .addTo(mapInstance)
+      L.marker([c.lat,c.lng],{icon:wishIcon}).addTo(mapInstance)
         .bindPopup(`<b>⭐ ${w.name}</b>${w.note?`<br><span style="color:#666">${w.note}</span>`:""}`);
     }
   }
-
-  if(allCoords.length>0){
-    mapInstance.fitBounds(allCoords,{padding:[40,40],maxZoom:10});
-  }
+  if(allCoords.length>0)mapInstance.fitBounds(allCoords,{padding:[40,40],maxZoom:10});
 }
 
 /* ── Render ── */
-function renderAll(){
-  document.getElementById("d-day").textContent=getDday();
-  updateRateDisplay(); renderContent();
-}
-
 function switchTab(i){
   if(i!==2&&mapInstance){mapInstance.remove();mapInstance=null;}
   state.tab=i;
   document.querySelectorAll(".tab-btn").forEach((b,idx)=>b.classList.toggle("active",idx===i));
   renderContent();
-  if(i===2) setTimeout(()=>initTravelMap(),80);
+  if(i===2)setTimeout(()=>initTravelMap(),80);
 }
 
 function renderContent(){
   const el=document.getElementById("main-content");
-  if(state.tab===0) el.innerHTML=renderFinance();
-  if(state.tab===1) el.innerHTML=renderSchedule();
+  document.getElementById("d-day").textContent=getDday();
+  updateRateDisplay();
+  if(state.tab===0)el.innerHTML=renderFinance();
+  if(state.tab===1)el.innerHTML=renderSchedule();
   if(state.tab===2){
     if(mapInstance){mapInstance.remove();mapInstance=null;}
     el.innerHTML=renderTravel();
     setTimeout(()=>initTravelMap(),80);
   }
-  if(state.tab===3) el.innerHTML=renderChecklist();
+  if(state.tab===3)el.innerHTML=renderChecklist();
 }
 
-/* ── Finance ── */
+/* ════════════════════════════════════
+   FINANCE
+════════════════════════════════════ */
 function renderFinance(){
   const fi=MONTHS.indexOf(state.finM);
   const {d,sg,yn,carry,rent,living,korF,trE,income,expense}=calcFin(state.finM);
   const bal=income-expense;
-  const isSeonggokMonth=!!SEONGGOK[state.finM];
+  const isSG=!!SEONGGOK[state.finM];
+  const balPos=bal>=0;
+
   return`
   <div class="mnav">
     <button class="mn-btn" onclick="moveFin(-1)" ${fi===0?"disabled":""}>‹</button>
-    <span class="mn-label">${state.finM.replace("-","년 ").replace(/(\d+)$/,m=>parseInt(m)+"월")}</span>
+    <span class="mn-label">${fmtMonth(state.finM)}</span>
     <button class="mn-btn" onclick="moveFin(1)" ${fi===MONTHS.length-1?"disabled":""}>›</button>
   </div>
+
+  <!-- Summary tiles -->
+  <div class="metric-row">
+    <div class="metric-tile">
+      <div class="m-lbl">총 수입</div>
+      <div class="m-val" style="color:#1557B0;font-size:18px">+${fmt(income)}</div>
+      <div class="m-sub">원</div>
+    </div>
+    <div class="metric-tile">
+      <div class="m-lbl">총 지출</div>
+      <div class="m-val" style="color:#D94040;font-size:18px">-${fmt(expense)}</div>
+      <div class="m-sub">원</div>
+    </div>
+    <div class="metric-tile" style="background:${balPos?"#F0FDF9":"#FEF2F2"};border-color:${balPos?"#A7F3D0":"#FECACA"}">
+      <div class="m-lbl">잔액</div>
+      <div class="m-val" style="color:${balPos?"#00957A":"#D94040"};font-size:18px">${balPos?"+":""}${fmt(bal)}</div>
+      <div class="m-sub" style="font-weight:700;color:${balPos?"#00957A":"#D94040"}">원 ${balPos?"✓":"⚠"}</div>
+    </div>
+  </div>
+
+  <!-- Income card -->
   <div class="card">
     <div class="card-title">📥 이달의 수입</div>
-    ${isSeonggokMonth?`<div class="preset-badge">✅ 성곡재단 지원금 지급 월 — $${(SEONGGOK[state.finM]||0).toLocaleString()} 자동입력</div>`:""}
+    ${isSG?`<div class="preset-badge">✅ 성곡재단 지급 월 — $${(SEONGGOK[state.finM]||0).toLocaleString()} 자동입력</div>`:""}
     <div class="field">
       <label class="lbl">성곡재단 지원금 (USD)</label>
       <div class="i-wrap"><span class="prefix">$</span><input class="inp" type="text" inputmode="numeric" value="${fmtComma(d.seonggok)}" placeholder="0" oninput="inputFin(this,'seonggok')"/></div>
-      ${d.seonggok?`<div class="hint">≈ ${fmt(sg)}원 (환율 ${fmt(state.rate)}원 적용)</div>`:""}
+      ${d.seonggok?`<div class="hint">≈ ${fmt(sg)}원</div>`:""}
     </div>
     <div class="field">
       <label class="lbl">연합뉴스 월급 (KRW)</label>
       <div class="i-wrap"><span class="prefix">₩</span><input class="inp" type="text" inputmode="numeric" value="${fmtComma(d.yonhap)}" placeholder="0" oninput="inputFin(this,'yonhap')"/></div>
     </div>
-    ${carry>0?`
-    <div class="field">
+    ${carry>0?`<div class="field">
       <label class="lbl" style="color:#C05A2A">↩️ 전월 이월 잔액</label>
-      <div style="background:#FFF8F0;border:1.5px solid #F0C896;border-radius:10px;padding:11px 14px;font-size:14px;font-weight:700;color:#C05A2A">+${fmt(carry)}원</div>
-      <div class="hint" style="color:#C05A2A">지난 달 잔액이 이번 달 수입에 합산됩니다</div>
+      <div style="background:#FFF8F0;border:1.5px solid #F0C896;border-radius:8px;padding:10px 14px;font-size:14px;font-weight:700;color:#C05A2A">+${fmt(carry)}원</div>
+      <div class="hint" style="color:#C05A2A">지난 달 잔액 자동 합산</div>
     </div>`:""}
-    <div class="divider">총 수입 &nbsp; ${fmt(income)}원${carry>0?` <span style="font-size:10.5px;font-weight:500;color:#C05A2A">(이월 ${fmt(carry)}원 포함)</span>`:""}</div>
+    <div class="divider-line"></div>
+    <div class="total-line"><span>총 수입</span><strong style="color:#1557B0">+${fmt(income)}원</strong></div>
   </div>
+
+  <!-- Expense card -->
   <div class="card">
     <div class="card-title">📤 이달의 지출</div>
     <div class="field">
@@ -524,58 +563,71 @@ function renderFinance(){
       ${d.living?`<div class="hint">≈ ${fmt(living)}원</div>`:""}
     </div>
     <div class="field">
-      <label class="lbl">한국 고정지출 (KRW) — 보험·적금·대출 등</label>
-      <div class="i-wrap"><span class="prefix">₩</span><input class="inp" type="text" inputmode="numeric" value="${fmtComma(d.korFixed)}" placeholder="0" oninput="inputFin(this,'korFixed')"/></div>
+      <label class="lbl">한국 고정지출 (KRW)</label>
+      <div class="i-wrap"><span class="prefix">₩</span><input class="inp" type="text" inputmode="numeric" value="${fmtComma(d.korFixed)}" placeholder="보험·적금·대출 등" oninput="inputFin(this,'korFixed')"/></div>
     </div>
     <div class="field">
       <label class="lbl">여행 지출 (USD)</label>
       <div class="i-wrap"><span class="prefix">$</span><input class="inp" type="text" inputmode="numeric" value="${fmtComma(d.travelExp)}" placeholder="0" oninput="inputFin(this,'travelExp')"/></div>
       ${d.travelExp?`<div class="hint">≈ ${fmt(trE)}원</div>`:""}
     </div>
-    <div class="divider">총 지출 &nbsp; ${fmt(expense)}원</div>
+    <div class="divider-line"></div>
+    <div class="total-line"><span>총 지출</span><strong style="color:#D94040">-${fmt(expense)}원</strong></div>
   </div>
-  <div class="sum-card" style="background:${bal>=0?"#F0FDF6":"#FEF2F2"};border-color:${bal>=0?"#16A34A":"#DC2626"}">
-    <div style="font-weight:700;font-size:13px;color:#1C1712">📊 이달의 결산</div>
-    <div class="sum-row">
-      <div class="sum-item"><span style="color:#9A8B7A">수입</span><strong style="color:#16A34A;font-size:14px">+${fmt(income)}원</strong></div>
-      <div class="sum-item"><span style="color:#9A8B7A">지출</span><strong style="color:#DC2626;font-size:14px">-${fmt(expense)}원</strong></div>
-      <div class="sum-item"><span style="color:#9A8B7A">잔액</span><strong style="color:${bal>=0?"#16A34A":"#DC2626"};font-size:17px">${bal>=0?"+":""}${fmt(bal)}원</strong></div>
-    </div>
-  </div>
-  <div class="card" style="margin-top:14px">
+
+  <!-- Seonggok schedule -->
+  <div class="card">
     <div class="card-title">📆 성곡재단 지원금 일정</div>
-    ${Object.entries(SEONGGOK).map(([m,amt])=>`
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #E5DDD4;font-size:12.5px">
-      <span style="color:${m===state.finM?"#C05A2A":"#1C1712"};font-weight:${m===state.finM?700:500}">${m.replace("-","년 ").replace(/(\d+)$/,n=>parseInt(n)+"월")}</span>
-      <span style="font-weight:700;color:#3A6FD8">$${amt.toLocaleString()} <span style="font-size:10.5px;color:#9A8B7A">≈ ${fmt(amt*state.rate)}원</span></span>
-    </div>`).join("")}
-    <div style="padding-top:10px;font-size:11px;color:#9A8B7A">총 지원금: $36,250 ≈ ${fmt(36250*state.rate)}원</div>
+    <table class="sg-table">
+      <thead><tr><th>지급월</th><th>금액 (USD)</th><th>원화 환산</th><th>상태</th></tr></thead>
+      <tbody>
+        ${Object.entries(SEONGGOK).map(([m,amt])=>{
+          const isNow=m===state.finM;
+          const isPast=MONTHS.indexOf(m)<MONTHS.indexOf(state.finM);
+          return`<tr class="${isNow?"active-row":""}">
+            <td style="font-weight:${isNow?700:400};color:${isNow?"#1557B0":"var(--text)"}">${fmtMonth(m)}</td>
+            <td style="font-weight:700">$${amt.toLocaleString()}</td>
+            <td style="color:var(--muted);font-size:12px">≈ ${fmt(amt*state.rate)}원</td>
+            <td>${isNow?`<span class="badge-pos">이번 달</span>`:isPast?`<span style="color:var(--light);font-size:11px">지급 완료</span>`:`<span style="color:var(--light);font-size:11px">예정</span>`}</td>
+          </tr>`;
+        }).join("")}
+      </tbody>
+    </table>
+    <div style="margin-top:12px;padding:10px;background:var(--bg);border-radius:6px;font-size:11.5px;display:flex;justify-content:space-between;color:var(--muted)">
+      <span>총 지원금</span>
+      <strong style="color:var(--text)">$36,250 &nbsp;≈ ${fmt(36250*state.rate)}원</strong>
+    </div>
   </div>`;
 }
 
-/* ── Schedule ── */
+/* ════════════════════════════════════
+   SCHEDULE
+════════════════════════════════════ */
 function renderSchedule(){
   const ci=MONTHS.indexOf(state.calM);
   const [cy,cm]=state.calM.split("-").map(Number);
-  const days=daysIn(cy,cm); const fd=firstDay(cy,cm);
+  const days=daysIn(cy,cm);const fd=firstDay(cy,cm);
   const todayStr=new Date().toISOString().slice(0,10);
   const DOW=["일","월","화","수","목","금","토"];
-  const DOW_C=["#DC2626","#9A8B7A","#9A8B7A","#9A8B7A","#9A8B7A","#9A8B7A","#3A6FD8"];
+  const DOW_C=["#D94040","var(--muted)","var(--muted)","var(--muted)","var(--muted)","var(--muted)","#1557B0"];
+
   let cells="";
-  for(let i=0;i<fd;i++) cells+=`<div></div>`;
+  for(let i=0;i<fd;i++)cells+=`<div></div>`;
   for(let d=1;d<=days;d++){
     const ds=`${cy}-${String(cm).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
     const devs=state.events.filter(e=>e.date===ds);
-    const isToday=ds===todayStr; const dow=(fd+d-1)%7;
-    cells+=`<div class="cal-cell" style="background:${isToday?"#DCF0FF":"white"};border:${isToday?"2px solid #C05A2A":"1px solid #E8EFF8"}">
-      <div class="day-n" style="color:${DOW_C[dow]};font-weight:${isToday?700:500}">${d}</div>
+    const isToday=ds===todayStr;const dow=(fd+d-1)%7;
+    cells+=`<div class="cal-cell" style="background:${isToday?"#EBF3FF":"white"};border-color:${isToday?"#1557B0":"var(--border)"}">
+      <div class="day-n" style="color:${DOW_C[dow]};font-weight:${isToday?800:500}">${d}</div>
       ${devs.slice(0,2).map(ev=>`<div class="e-dot" style="background:${ev.color}">${ev.title}</div>`).join("")}
-      ${devs.length>2?`<div style="font-size:7px;color:#999;padding:0 2px">+${devs.length-2}개</div>`:""}
+      ${devs.length>2?`<div style="font-size:7px;color:var(--light);padding:0 2px">+${devs.length-2}</div>`:""}
     </div>`;
   }
+
   const monthEvs=state.events.filter(e=>e.date.startsWith(state.calM)).sort((a,b)=>a.date.localeCompare(b.date));
   const nonSeminar=monthEvs.filter(e=>e.type!=="seminar");
   const seminarCount=monthEvs.filter(e=>e.type==="seminar").length;
+
   const evForm=state.showEv?`
     <div class="form-box">
       <input class="f-inp" type="date" id="ev-date" value="${state.newEv.date}"/>
@@ -591,32 +643,49 @@ function renderSchedule(){
         <button class="cancel-btn" onclick="state.showEv=false;renderContent()">취소</button>
       </div>
     </div>`:"";
+
   return`
   <div class="mnav">
     <button class="mn-btn" onclick="moveCal(-1)" ${ci===0?"disabled":""}>‹</button>
     <span class="mn-label">${cy}년 ${cm}월</span>
     <button class="mn-btn" onclick="moveCal(1)" ${ci===MONTHS.length-1?"disabled":""}>›</button>
   </div>
-  <div class="cal-grid" style="margin-bottom:4px">
-    ${DOW.map((d,i)=>`<div class="day-hdr" style="color:${DOW_C[i]}">${d}</div>`).join("")}
+
+  <div class="card" style="padding:14px">
+    <div class="cal-grid" style="margin-bottom:4px">
+      ${DOW.map((d,i)=>`<div class="day-hdr" style="color:${DOW_C[i]}">${d}</div>`).join("")}
+    </div>
+    <div class="cal-grid">${cells}</div>
   </div>
-  <div class="cal-grid" style="margin-bottom:12px">${cells}</div>
-  <button class="add-btn" onclick="state.showEv=!state.showEv;renderContent()">+ 일정 추가</button>
+
+  <button class="btn-primary" onclick="state.showEv=!state.showEv;renderContent()">+ 일정 추가</button>
   ${evForm}
+
   ${(nonSeminar.length>0||seminarCount>0)?`
-  <div class="ev-list">
-    <div style="font-weight:700;font-size:12.5px;margin-bottom:10px;color:#1C1712">이달의 일정</div>
-    ${seminarCount>0?`<div class="ev-item"><div class="ev-dot" style="background:#7C3AED"></div><div><div style="font-size:12.5px;font-weight:700">📚 목요 세미나</div><div style="font-size:10.5px;color:#C4B5A5">이번 달 ${seminarCount}회</div></div></div>`:""}
-    ${nonSeminar.map(ev=>`<div class="ev-item"><div class="ev-dot" style="background:${ev.color}"></div><div><div style="font-size:12.5px;font-weight:600">${ev.title}</div><div style="font-size:10.5px;color:#C4B5A5">${ev.date}</div></div></div>`).join("")}
+  <div class="ev-list" style="margin-top:12px">
+    <div style="font-weight:700;font-size:12.5px;margin-bottom:10px;color:var(--text);display:flex;align-items:center;gap:6px">
+      <span>이달의 일정</span>
+      <span style="font-size:10px;color:var(--muted);font-weight:400">${monthEvs.length}건</span>
+    </div>
+    ${seminarCount>0?`<div class="ev-item">
+      <div class="ev-bar" style="background:#5B4FD4"></div>
+      <div><div style="font-size:12.5px;font-weight:700">📚 목요 세미나</div><div style="font-size:10.5px;color:var(--light)">이번 달 ${seminarCount}회</div></div>
+    </div>`:""}
+    ${nonSeminar.map(ev=>`<div class="ev-item">
+      <div class="ev-bar" style="background:${ev.color}"></div>
+      <div><div style="font-size:12.5px;font-weight:600">${ev.title}</div><div style="font-size:10.5px;color:var(--light)">${ev.date}</div></div>
+    </div>`).join("")}
   </div>`:""}
-  <div class="legend">
-    ${Object.entries(TYPE_LABELS).map(([t,l])=>`<div class="leg-item"><div style="width:8px;height:8px;border-radius:50%;background:${TYPE_COLORS[t]}"></div><span>${l}</span></div>`).join("")}
+
+  <div class="legend" style="margin-top:12px">
+    ${Object.entries(TYPE_LABELS).map(([t,l])=>`<div class="leg-item"><div style="width:8px;height:8px;border-radius:2px;background:${TYPE_COLORS[t]}"></div><span>${l}</span></div>`).join("")}
   </div>`;
 }
 
-/* ── Travel ── */
+/* ════════════════════════════════════
+   TRAVEL
+════════════════════════════════════ */
 function renderTravel(){
-  // 누적 총액 — 모두 USD 기준으로 합산
   const totalUSD=state.travels.reduce((s,t)=>s+travelAmtUSD(t),0);
 
   const trForm=state.showTr?`
@@ -627,7 +696,7 @@ function renderTravel(){
         <input class="f-inp" type="date" id="tr-end" value="${state.newTr.end}" style="flex:1"/>
       </div>
       <div class="i-wrap">
-        <select id="tr-currency" style="padding:0 10px;background:#EBF6FF;color:#9A8B7A;border:none;border-right:1px solid #E5DDD4;font-size:12px;font-weight:700;font-family:Verdana,sans-serif;cursor:pointer" onchange="state.newTr.currency=this.value;renderContent()">
+        <select id="tr-currency" style="padding:0 12px;background:#F5F7FA;color:var(--muted);border:none;border-right:1.5px solid var(--border);font-size:12px;font-weight:700;cursor:pointer" onchange="state.newTr.currency=this.value;renderContent()">
           <option value="USD" ${state.newTr.currency==="USD"?"selected":""}>$ USD</option>
           <option value="KRW" ${state.newTr.currency==="KRW"?"selected":""}>₩ KRW</option>
         </select>
@@ -641,11 +710,11 @@ function renderTravel(){
     </div>`:"";
 
   const wishForm=state.showWish?`
-    <div class="form-box" style="background:#FFFBF0;border:1.5px solid #FDE68A">
-      <input class="f-inp" id="wish-name" placeholder="가고 싶은 곳 (예: Yellowstone NP, WY)"/>
+    <div class="form-box" style="border-color:var(--amber)">
+      <input class="f-inp" id="wish-name" placeholder="가고 싶은 곳 (예: Yellowstone NP)"/>
       <input class="f-inp" id="wish-note" placeholder="메모 (이유·예상 비용 등)"/>
       <div class="row2">
-        <button class="save-btn" style="background:#D97706" onclick="addWish()">저장</button>
+        <button class="save-btn" style="background:var(--amber)" onclick="addWish()">저장</button>
         <button class="cancel-btn" onclick="state.showWish=false;renderContent()">취소</button>
       </div>
     </div>`:"";
@@ -653,60 +722,66 @@ function renderTravel(){
   return`
   <!-- 지도 -->
   <div class="card" style="padding:14px">
-    <div class="card-title" style="margin-bottom:6px">🗺 내 여행 지도</div>
-    <div class="map-legend-row">
-      <span><span class="map-dot" style="background:#16A34A"></span>여행한 곳 (${state.travels.length})</span>
-      <span><span class="map-dot" style="background:#D97706"></span>가고 싶은 곳 (${state.wishlist.length})</span>
-      <span style="margin-left:auto;color:#C4B5A5;font-size:10px">핀 클릭 시 상세 정보</span>
+    <div class="card-title" style="margin-bottom:8px">🗺 내 여행 지도</div>
+    <div class="map-stat-row">
+      <span><span class="map-dot" style="background:#00957A"></span>여행한 곳 (${state.travels.length})</span>
+      <span><span class="map-dot" style="background:#E8920A"></span>가고 싶은 곳 (${state.wishlist.length})</span>
+      <span style="margin-left:auto;color:var(--light);font-size:10px">핀 클릭 → 상세정보</span>
     </div>
     <div id="travel-map"></div>
-    <div style="font-size:10px;color:#C4B5A5;margin-top:6px;text-align:right">© OpenStreetMap contributors</div>
   </div>
 
-  <!-- 여행 기록 -->
+  <!-- Banner -->
   <div class="banner">
-    <div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px">🌍 누적 여행 지출 (USD 환산 합계)</div>
-    <div style="font-weight:700;font-size:21px">$${fmt(totalUSD,0)} <span style="font-size:13px;font-weight:400;color:rgba(255,255,255,.5)">≈ ${fmt(totalUSD*state.rate)}원</span></div>
-    <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:3px">총 ${state.travels.length}번의 여행 기록</div>
+    <div class="banner-lbl">누적 여행 지출 (USD 기준)</div>
+    <div class="banner-val">$${fmt(totalUSD,0)}</div>
+    <div class="banner-sub">≈ ${fmt(totalUSD*state.rate)}원 &nbsp;·&nbsp; 총 ${state.travels.length}번의 여행</div>
   </div>
-  <button class="add-btn" style="margin-bottom:12px" onclick="state.showTr=!state.showTr;if(state.showTr)state.showWish=false;renderContent()">+ 여행 기록 추가</button>
+
+  <button class="btn-primary btn-accent" style="margin-bottom:10px" onclick="state.showTr=!state.showTr;if(state.showTr)state.showWish=false;renderContent()">+ 여행 기록 추가</button>
   ${trForm}
-  ${state.travels.length===0?`<div class="empty">아직 기록된 여행이 없어요 ✈️<br/>첫 미국 여행을 추가해보세요!</div>`
-    :state.travels.map(t=>`
+
+  ${state.travels.length===0?`<div class="empty">아직 기록된 여행이 없어요 ✈️<br/>첫 미국 여행을 추가해보세요!</div>`:
+    state.travels.map(t=>`
     <div class="tr-card">
       <button class="del-btn" onclick="removeTravel('${t.id}')">×</button>
-      <div style="display:flex;justify-content:space-between;align-items:center;padding-right:24px">
-        <div style="font-weight:700;font-size:15px">✅ ${t.dest}</div>
-        <div style="font-weight:700;color:#16A34A;font-size:15px">${travelMainDisplay(t)}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding-right:28px">
+        <div>
+          <div style="font-weight:700;font-size:15px">✅ ${t.dest}</div>
+          <div style="font-size:11px;color:var(--light);margin-top:2px">${t.start}${t.end&&t.end!==t.start?` ~ ${t.end}`:""}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-weight:800;color:#00957A;font-size:16px">${travelMainDisplay(t)}</div>
+          <div style="font-size:10.5px;color:var(--light)">${travelSubDisplay(t)}</div>
+        </div>
       </div>
-      <div style="font-size:11px;color:#C4B5A5;margin-top:3px">${t.start}${t.end&&t.end!==t.start?` ~ ${t.end}`:""}</div>
-      ${t.note?`<div style="font-size:12.5px;color:#9A8B7A;margin-top:6px">${t.note}</div>`:""}
-      <div style="font-size:11px;color:#C4B5A5;margin-top:4px">${travelSubDisplay(t)}</div>
-      <a href="https://www.google.com/maps/search/${encodeURIComponent(t.dest)}" target="_blank" class="map-btn">🗺 Google Maps</a>
+      ${t.note?`<div style="font-size:12px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">${t.note}</div>`:""}
+      <a href="https://www.google.com/maps/search/${encodeURIComponent(t.dest)}" target="_blank" class="map-btn">🗺 Google Maps에서 보기</a>
     </div>`).join("")}
 
   <!-- 버킷리스트 -->
-  <div style="margin-top:6px;margin-bottom:10px;display:flex;align-items:center;gap:10px">
-    <div style="font-weight:700;font-size:13px;color:#1C1712">⭐ 가고 싶은 곳</div>
-    <div style="flex:1;border-top:1px dashed #E5DDD4"></div>
+  <div class="sec-hdr" style="margin-top:16px">
+    <span class="sec-hdr-txt">⭐ 가고 싶은 곳</span>
+    <div class="sec-hdr-line"></div>
   </div>
-  <button class="add-btn secondary" style="margin-bottom:12px" onclick="state.showWish=!state.showWish;if(state.showWish)state.showTr=false;renderContent()">+ 버킷리스트 추가</button>
+  <button class="btn-primary btn-amber" style="margin-bottom:10px" onclick="state.showWish=!state.showWish;if(state.showWish)state.showTr=false;renderContent()">+ 버킷리스트 추가</button>
   ${wishForm}
-  ${state.wishlist.length===0?`<div class="empty" style="padding:20px">버킷리스트를 추가해보세요 ⭐<br/><span style="font-size:11px">지도에 노란 핀으로 표시돼요</span></div>`
-    :state.wishlist.map(w=>`
+  ${state.wishlist.length===0?`<div class="empty" style="padding:20px">버킷리스트를 추가해보세요 ⭐<br/><span style="font-size:11px">지도에 노란 핀으로 표시돼요</span></div>`:
+    state.wishlist.map(w=>`
     <div class="wish-card">
-      <div style="font-size:20px;flex-shrink:0">⭐</div>
-      <div style="flex:1;padding-right:20px">
-        <div style="font-weight:700;font-size:13.5px;color:#1C1712">${w.name}</div>
-        ${w.note?`<div style="font-size:11.5px;color:#78716C;margin-top:3px">${w.note}</div>`:""}
-        <a href="https://www.google.com/maps/search/${encodeURIComponent(w.name)}" target="_blank" class="map-btn" style="margin-top:6px">🗺 Google Maps</a>
+      <div style="font-size:22px;flex-shrink:0">⭐</div>
+      <div style="flex:1;padding-right:22px">
+        <div style="font-weight:700;font-size:13.5px;color:var(--text)">${w.name}</div>
+        ${w.note?`<div style="font-size:11.5px;color:var(--muted);margin-top:3px">${w.note}</div>`:""}
+        <a href="https://www.google.com/maps/search/${encodeURIComponent(w.name)}" target="_blank" class="map-btn">🗺 Google Maps</a>
       </div>
       <button class="del-btn" onclick="removeWish('${w.id}')">×</button>
-    </div>`).join("")}
-  `;
+    </div>`).join("")}`;
 }
 
-/* ── Checklist ── */
+/* ════════════════════════════════════
+   CHECKLIST
+════════════════════════════════════ */
 function renderChecklist(){
   const done=state.checks.filter(c=>c.done).length;
   const total=state.checks.length;
@@ -724,70 +799,70 @@ function renderChecklist(){
 
   const catsHtml=state.catOrder.map((cat,ci)=>{
     const items=state.checks.filter(c=>c.cat===cat);
+    const catDone=items.filter(c=>c.done).length;
     const showAdd=state.addItemCatIdx===ci;
-
     const addItemForm=showAdd?`
-      <div style="padding:10px 0 4px;border-bottom:1px solid #E5DDD4">
+      <div style="padding:10px 14px;border-bottom:1px solid var(--border);background:#F8FAFE">
         <input class="f-inp" id="new-item-text" placeholder="항목 내용 입력" style="margin-bottom:6px"/>
         <div class="row2">
           <button class="save-btn" onclick="addCheckItem(${ci})">추가</button>
           <button class="cancel-btn" onclick="state.addItemCatIdx=null;renderContent()">취소</button>
         </div>
       </div>`:"";
-
     const itemsHtml=items.map(item=>{
       if(state.editCheckId===item.id){
-        return`<div style="padding:10px 0;border-bottom:1px solid #E5DDD4">
-          <input class="f-inp" id="edit-item-${item.id}" value="${escapeHtml(item.text)}" style="margin-bottom:6px"/>
+        return`<div style="padding:10px 14px;border-bottom:1px solid var(--border);background:#F8FAFE">
+          <input class="f-inp" id="edit-item-${item.id}" value="${esc(item.text)}" style="margin-bottom:6px"/>
           <div class="row2">
             <button class="save-btn" onclick="saveCheckItem(${item.id})">저장</button>
             <button class="cancel-btn" onclick="state.editCheckId=null;renderContent()">취소</button>
           </div>
         </div>`;
       }
-      return`<div style="display:flex;align-items:center;border-bottom:1px solid #E5DDD4">
-        <div class="ch-item" style="flex:1;border:none;min-width:0" onclick="toggleCheck(${item.id})">
-          <div class="ch-box" style="background:${item.done?"#0D72C6":"white"};border-color:${item.done?"#0D72C6":"#B8DDF5"};flex-shrink:0">
-            ${item.done?`<span style="color:white;font-size:12px;font-weight:700">✓</span>`:""}
+      return`<div class="ch-item">
+        <div class="ch-check-area" onclick="toggleCheck(${item.id})">
+          <div class="ch-box" style="background:${item.done?"#1557B0":"white"};border-color:${item.done?"#1557B0":"var(--border)"}">
+            ${item.done?`<span style="color:white;font-size:11px;font-weight:800">✓</span>`:""}
           </div>
-          <span style="font-size:13px;text-decoration:${item.done?"line-through":"none"};color:${item.done?"#C4B5A5":"#1E2D45"};word-break:break-all">${escapeHtml(item.text)}</span>
+          <span style="font-size:13px;text-decoration:${item.done?"line-through":"none"};color:${item.done?"var(--light)":"var(--text)"};word-break:break-all">${esc(item.text)}</span>
         </div>
-        <div style="display:flex;gap:4px;padding:0 4px;flex-shrink:0">
+        <div style="display:flex;gap:3px;padding:0 10px;flex-shrink:0">
           <button onclick="state.editCheckId=${item.id};state.addItemCatIdx=null;renderContent()"
-            style="background:#F0F6FF;border:1px solid #E5DDD4;color:#C05A2A;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;line-height:1">✏️</button>
+            style="background:var(--bg);border:1px solid var(--border);color:var(--muted);border-radius:5px;padding:4px 8px;font-size:11px;cursor:pointer;line-height:1">✏️</button>
           <button onclick="deleteCheckItem(${item.id})"
-            style="background:#FFF0F0;border:1px solid #FECACA;color:#EF4444;border-radius:6px;padding:4px 8px;font-size:13px;cursor:pointer;font-weight:700;line-height:1">×</button>
+            style="background:var(--coral-pale);border:1px solid #FECACA;color:var(--coral);border-radius:5px;padding:4px 8px;font-size:13px;cursor:pointer;font-weight:700;line-height:1">×</button>
         </div>
       </div>`;
     }).join("");
-
     return`<div class="ch-cat">
-      <div class="ch-cat-title" style="display:flex;justify-content:space-between;align-items:center;border-bottom:none;padding-bottom:0;margin-bottom:0">
-        <span>${escapeHtml(cat)}</span>
+      <div class="ch-cat-hdr">
+        <span>${esc(cat)} <span style="font-weight:400;color:var(--muted);font-size:10px">${catDone}/${items.length}</span></span>
         <div style="display:flex;gap:5px">
           <button onclick="state.addItemCatIdx=state.addItemCatIdx===${ci}?null:${ci};state.editCheckId=null;renderContent()"
-            style="background:#F5EDE7;border:1px solid #E5DDD4;color:#3A6FD8;border-radius:5px;padding:3px 9px;font-size:10.5px;font-weight:700;cursor:pointer;font-family:Verdana,sans-serif">+ 항목</button>
+            style="background:var(--blue-pale);border:1px solid #BFD8F5;color:var(--blue);border-radius:5px;padding:3px 10px;font-size:10.5px;font-weight:700;cursor:pointer">+ 항목</button>
           <button onclick="deleteCat(${ci})"
-            style="background:#FFF0F0;border:1px solid #FECACA;color:#EF4444;border-radius:5px;padding:3px 8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Verdana,sans-serif">×</button>
+            style="background:var(--coral-pale);border:1px solid #FECACA;color:var(--coral);border-radius:5px;padding:3px 8px;font-size:12px;font-weight:700;cursor:pointer">×</button>
         </div>
       </div>
-      <div style="border:1.5px solid #E8EFF8;border-radius:0 0 8px 8px;border-top:none;overflow:hidden;margin-top:0">
-        <div style="height:2px;background:#C05A2A"></div>
-        ${addItemForm}
-        ${itemsHtml}
-        ${items.length===0&&!showAdd?`<div style="font-size:12px;color:#B8CDD8;padding:12px;text-align:center">항목 없음 — 위 + 항목 버튼으로 추가하세요</div>`:""}
+      <div class="ch-body">
+        ${addItemForm}${itemsHtml}
+        ${items.length===0&&!showAdd?`<div style="font-size:12px;color:var(--light);padding:14px;text-align:center">항목 없음 — + 항목 버튼으로 추가</div>`:""}
       </div>
     </div>`;
   }).join("");
 
   return`
   <div class="banner">
-    <div style="font-size:13px;font-weight:700">출국 준비 체크리스트</div>
-    <div class="prog-wrap" style="margin-top:8px"><div class="prog-bar" style="width:${pct}%"></div></div>
-    <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:6px">${pct}% 완료 &nbsp;·&nbsp; ${diff>0?`출발까지 D-${diff}`:diff===0?"오늘 출발!":"출발 완료 🎉"}</div>
+    <div class="banner-lbl">출국 준비 체크리스트</div>
+    <div style="display:flex;align-items:baseline;gap:10px;margin-top:2px">
+      <div class="banner-val" style="font-size:36px">${pct}<span style="font-size:18px;margin-left:2px">%</span></div>
+      <div style="font-size:12px;color:rgba(255,255,255,.5)">${done} / ${total} 완료</div>
+    </div>
+    <div class="prog-bg" style="background:rgba(255,255,255,.12)"><div class="prog-fill" style="width:${pct}%"></div></div>
+    <div class="banner-sub">${diff>0?`출발까지 D-${diff}`:diff===0?"오늘 출발!":"출발 완료 🎉"}</div>
   </div>
   ${catsHtml}
-  <button class="add-btn secondary" onclick="state.showAddCat=!state.showAddCat;state.addItemCatIdx=null;renderContent()" style="margin-top:6px">+ 새 카테고리 추가</button>
+  <button class="btn-primary btn-accent" onclick="state.showAddCat=!state.showAddCat;state.addItemCatIdx=null;renderContent()" style="margin-top:4px">+ 새 카테고리 추가</button>
   ${addCatForm}`;
 }
 
@@ -796,151 +871,96 @@ function moveFin(d){const i=MONTHS.indexOf(state.finM),n=i+d;if(n>=0&&n<MONTHS.l
 function moveCal(d){const i=MONTHS.indexOf(state.calM),n=i+d;if(n>=0&&n<MONTHS.length){state.calM=MONTHS[n];renderContent();}}
 
 let _finTimer=null;
-
-function fmtComma(v){
-  const raw=String(v||"").replace(/[^0-9]/g,"");
-  if(!raw) return "";
-  return Number(raw).toLocaleString("ko-KR");
-}
-
+function fmtComma(v){const raw=String(v||"").replace(/[^0-9]/g,"");if(!raw)return"";return Number(raw).toLocaleString("ko-KR");}
 function inputFin(el,field){
   const raw=el.value.replace(/[^0-9]/g,"");
-  const cursor=el.selectionStart;
-  const oldLen=el.value.length;
+  const cursor=el.selectionStart;const oldLen=el.value.length;
   el.value=raw?Number(raw).toLocaleString("ko-KR"):"";
   const newLen=el.value.length;
   el.selectionStart=el.selectionEnd=Math.max(0,cursor+(newLen-oldLen));
-  if(!state.finance[state.finM]) state.finance[state.finM]={};
+  if(!state.finance[state.finM])state.finance[state.finM]={};
   state.finance[state.finM][field]=raw;
-  saveLocal();
-  clearTimeout(_finTimer);
-  _finTimer=setTimeout(()=>renderContent(),700);
-}
-
-function upFin(field,val){
-  if(!state.finance[state.finM]) state.finance[state.finM]={};
-  state.finance[state.finM][field]=val;
-  saveLocal();
-  clearTimeout(_finTimer);
-  _finTimer=setTimeout(()=>renderContent(),700);
+  saveLocal();clearTimeout(_finTimer);_finTimer=setTimeout(()=>renderContent(),700);
 }
 
 function addEvent(){
   const date=document.getElementById("ev-date")?.value;
   const title=document.getElementById("ev-title")?.value;
   const type=document.getElementById("ev-type")?.value;
-  if(!date||!title) return;
+  if(!date||!title)return;
   state.events.push({id:"e"+Date.now(),date,title,type,color:TYPE_COLORS[type]||"#C05A2A"});
-  state.showEv=false; state.newEv={date:"",title:"",type:"personal"};
+  state.showEv=false;state.newEv={date:"",title:"",type:"personal"};
   renderContent();
 }
 
 function addTravel(){
   const dest=document.getElementById("tr-dest")?.value?.trim();
   const start=document.getElementById("tr-start")?.value;
-  if(!dest||!start) return;
+  if(!dest||!start)return;
   const currency=document.getElementById("tr-currency")?.value||"USD";
   const amount=document.getElementById("tr-amount")?.value||"0";
   const end=document.getElementById("tr-end")?.value||"";
   const note=document.getElementById("tr-note")?.value||"";
   const tId="t"+Date.now();
-
-  state.travels.push({id:tId, dest, start, end, amount, currency, note});
-
-  // ✅ 스케줄 탭 자동 연동
-  const evTitle=end&&end!==start?`✈️ ${dest} (~${end})` :`✈️ ${dest}`;
-  state.events.push({
-    id:"tr_ev_"+tId,
-    date:start,
-    title:evTitle,
-    type:"personal",
-    color:TYPE_COLORS["personal"]
-  });
-
-  state.showTr=false;
-  state.newTr={dest:"",start:"",end:"",amount:"",currency:"USD",note:""};
-  saveLocal(); renderContent();
+  state.travels.push({id:tId,dest,start,end,amount,currency,note});
+  const evTitle=end&&end!==start?`✈️ ${dest} (~${end})`:`✈️ ${dest}`;
+  state.events.push({id:"tr_ev_"+tId,date:start,title:evTitle,type:"personal",color:TYPE_COLORS["personal"]});
+  state.showTr=false;state.newTr={dest:"",start:"",end:"",amount:"",currency:"USD",note:""};
+  saveLocal();renderContent();
 }
 
 function removeTravel(id){
   state.travels=state.travels.filter(t=>t.id!==id);
-  // 연동된 스케줄 이벤트도 함께 삭제
   state.events=state.events.filter(e=>e.id!=="tr_ev_"+id);
-  saveLocal(); renderContent();
+  saveLocal();renderContent();
 }
 
 function addWish(){
   const name=document.getElementById("wish-name")?.value?.trim();
-  if(!name) return;
-  state.wishlist.push({
-    id:"w"+Date.now(), name,
-    note:document.getElementById("wish-note")?.value||""
-  });
-  state.showWish=false;
-  saveLocal(); renderContent();
+  if(!name)return;
+  state.wishlist.push({id:"w"+Date.now(),name,note:document.getElementById("wish-note")?.value||""});
+  state.showWish=false;saveLocal();renderContent();
 }
-
-function removeWish(id){
-  state.wishlist=state.wishlist.filter(w=>w.id!==id);
-  saveLocal(); renderContent();
-}
-
-function toggleCheck(id){
-  state.checks=state.checks.map(c=>c.id===id?{...c,done:!c.done}:c);
-  saveLocal(); renderContent();
-}
-
+function removeWish(id){state.wishlist=state.wishlist.filter(w=>w.id!==id);saveLocal();renderContent();}
+function toggleCheck(id){state.checks=state.checks.map(c=>c.id===id?{...c,done:!c.done}:c);saveLocal();renderContent();}
 function addCheckItem(catIdx){
   const cat=state.catOrder[catIdx];
   const text=document.getElementById("new-item-text")?.value?.trim();
-  if(!text) return;
+  if(!text)return;
   state.checks.push({id:Date.now(),cat,text,done:false});
-  state.addItemCatIdx=null;
-  saveLocal(); renderContent();
+  state.addItemCatIdx=null;saveLocal();renderContent();
 }
-
 function saveCheckItem(id){
   const text=document.getElementById("edit-item-"+id)?.value?.trim();
-  if(!text) return;
+  if(!text)return;
   state.checks=state.checks.map(c=>c.id===id?{...c,text}:c);
-  state.editCheckId=null;
-  saveLocal(); renderContent();
+  state.editCheckId=null;saveLocal();renderContent();
 }
-
 function deleteCheckItem(id){
-  if(!confirm("이 항목을 삭제할까요?")) return;
-  state.checks=state.checks.filter(c=>c.id!==id);
-  saveLocal(); renderContent();
+  if(!confirm("이 항목을 삭제할까요?"))return;
+  state.checks=state.checks.filter(c=>c.id!==id);saveLocal();renderContent();
 }
-
 function addCat(){
   const name=document.getElementById("new-cat-name")?.value?.trim();
-  if(!name||state.catOrder.includes(name)) return;
-  state.catOrder.push(name);
-  state.showAddCat=false;
-  saveLocal(); renderContent();
+  if(!name||state.catOrder.includes(name))return;
+  state.catOrder.push(name);state.showAddCat=false;saveLocal();renderContent();
 }
-
 function deleteCat(idx){
   const cat=state.catOrder[idx];
   const itemCount=state.checks.filter(c=>c.cat===cat).length;
-  const msg=itemCount>0?`"${cat}" 카테고리와 항목 ${itemCount}개를 모두 삭제할까요?`:`"${cat}" 카테고리를 삭제할까요?`;
-  if(!confirm(msg)) return;
+  if(!confirm(itemCount>0?`"${cat}" 카테고리와 항목 ${itemCount}개를 삭제할까요?`:`"${cat}" 카테고리를 삭제할까요?`))return;
   state.checks=state.checks.filter(c=>c.cat!==cat);
-  state.catOrder.splice(idx,1);
-  saveLocal(); renderContent();
+  state.catOrder.splice(idx,1);saveLocal();renderContent();
 }
 
 /* ── Init ── */
 loadLocal();
-document.getElementById("d-day").textContent=getDday();
-updateRateDisplay();
 renderContent();
 
 fetch("https://api.frankfurter.app/latest?from=USD&to=KRW")
   .then(r=>r.json())
   .then(d=>{state.rate=Math.round(d.rates.KRW);state.rateDate=d.date+" (ECB)";updateRateDisplay();if(state.tab===0)renderContent();})
-  .catch(()=>{state.rateDate="수동 입력 가능 (✏️ 클릭)";updateRateDisplay();});
+  .catch(()=>{state.rateDate="수동 입력 가능";updateRateDisplay();});
 </script>
 </body>
 </html>
