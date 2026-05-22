@@ -53,10 +53,10 @@ button:disabled{opacity:.3;cursor:not-allowed!important}
 .hdr{background:#FFFFFF;padding:0;flex-shrink:0;position:relative;border-bottom:1px solid var(--border);box-shadow:0 2px 16px rgba(99,102,241,.08)}
 .hdr-top{padding:18px 22px 0;display:flex;align-items:center;justify-content:space-between}
 .logo-area{display:flex;align-items:center;gap:10px;cursor:default}
-.logo-text{color:var(--text)}
+.logo-text{color:var(--text);min-width:0;overflow:hidden}
 .logo-title{font-family:'Paperlogy',sans-serif;font-size:20px;font-weight:800;color:var(--text);letter-spacing:-.3px;line-height:1.1;transition:letter-spacing .35s,color .35s}
 .logo-area:hover .logo-title{background:linear-gradient(90deg,#6366F1 0%,#8B5CF6 50%,#EC4899 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:.8px}
-.logo-sub{font-size:10px;color:var(--muted);letter-spacing:.8px;font-weight:500;margin-top:2px}
+.logo-sub{font-size:10px;color:var(--muted);letter-spacing:.8px;font-weight:500;margin-top:2px;white-space:nowrap}
 @keyframes heartTilt{0%,55%,100%{transform:rotate(0deg)}10%{transform:rotate(-22deg)}20%{transform:rotate(-28deg)}30%{transform:rotate(-18deg)}40%{transform:rotate(8deg)}50%{transform:rotate(2deg)}}
 .dday-pill{background:var(--blue-pale);border:1px solid #C7D2FE;border-radius:20px;padding:6px 14px;font-size:11px;color:var(--blue);font-weight:600;white-space:nowrap}
 
