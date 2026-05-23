@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8"/>
@@ -228,6 +228,7 @@ button:disabled{opacity:.3;cursor:not-allowed!important}
   .mn-label{font-size:15px}
 }
 #main-content>*{animation:fadeUp .3s ease both}
+.btn-add-pill{padding:7px 14px;color:white;border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Paperlogy','Apple SD Gothic Neo',sans-serif;letter-spacing:.2px}
 </style>
 </head>
 <body>
@@ -412,19 +413,24 @@ function getDday(){
   return`🌍 미주리 생활 D+${-diff}`;
 }
 
+function _monthCalc(d,r){
+  const sg=(parseFloat(d.seonggok)||0)*r;const yn=parseFloat(d.yonhap)||0;
+  const etcInAmt=parseFloat(d.etcIncome)||0;
+  const etcIn=(d.etcIncomeCur||"KRW")==="USD"?etcInAmt*r:etcInAmt;
+  const rent=(parseFloat(d.rent)||0)*r;const living=(parseFloat(d.living)||0)*r;
+  const korF=parseFloat(d.korFixed)||0;const trE=(parseFloat(d.travelExp)||0)*r;
+  const etcExpAmt=parseFloat(d.etcExpense)||0;
+  const etcExp=(d.etcExpenseCur||"KRW")==="USD"?etcExpAmt*r:etcExpAmt;
+  return{sg,yn,etcIn,etcInAmt,rent,living,korF,trE,etcExp,etcExpAmt};
+}
+
 function getCarryover(targetM){
   const idx=MONTHS.indexOf(targetM);
   if(idx<=0)return 0;
   let carry=0;
   for(let i=0;i<idx;i++){
     const m=MONTHS[i];const d=state.finance[m]||{};const r=state.rate;
-    const sg=(parseFloat(d.seonggok)||0)*r;const yn=parseFloat(d.yonhap)||0;
-    const etcInAmt=parseFloat(d.etcIncome)||0;
-    const etcIn=(d.etcIncomeCur||"KRW")==="USD"?etcInAmt*r:etcInAmt;
-    const rent=(parseFloat(d.rent)||0)*r;const living=(parseFloat(d.living)||0)*r;
-    const korF=parseFloat(d.korFixed)||0;const trE=(parseFloat(d.travelExp)||0)*r;
-    const etcExpAmt=parseFloat(d.etcExpense)||0;
-    const etcExp=(d.etcExpenseCur||"KRW")==="USD"?etcExpAmt*r:etcExpAmt;
+    const{sg,yn,etcIn,rent,living,korF,trE,etcExp}=_monthCalc(d,r);
     const bal=(sg+yn+etcIn+carry)-(rent+living+korF+trE+etcExp);
     carry=bal>0?bal:0;
   }
@@ -433,14 +439,8 @@ function getCarryover(targetM){
 
 function calcFin(m){
   const d=state.finance[m]||{};const r=state.rate;
-  const sg=(parseFloat(d.seonggok)||0)*r;const yn=parseFloat(d.yonhap)||0;
   const carry=getCarryover(m);
-  const etcInAmt=parseFloat(d.etcIncome)||0;
-  const etcIn=(d.etcIncomeCur||"KRW")==="USD"?etcInAmt*r:etcInAmt;
-  const rent=(parseFloat(d.rent)||0)*r;const living=(parseFloat(d.living)||0)*r;
-  const korF=parseFloat(d.korFixed)||0;const trE=(parseFloat(d.travelExp)||0)*r;
-  const etcExpAmt=parseFloat(d.etcExpense)||0;
-  const etcExp=(d.etcExpenseCur||"KRW")==="USD"?etcExpAmt*r:etcExpAmt;
+  const{sg,yn,etcIn,etcInAmt,rent,living,korF,trE,etcExp,etcExpAmt}=_monthCalc(d,r);
   return{d,sg,yn,carry,etcIn,etcInAmt,rent,living,korF,trE,etcExp,etcExpAmt,income:sg+yn+etcIn+carry,expense:rent+living+korF+trE+etcExp};
 }
 
@@ -529,7 +529,6 @@ function switchTab(i){
   state.tab=i;
   document.querySelectorAll(".tab-btn").forEach((b,idx)=>b.classList.toggle("active",idx===i));
   renderContent();
-  if(i===2)setTimeout(()=>initTravelMap(),80);
 }
 
 function renderContent(){
@@ -725,7 +724,7 @@ function renderSchedule(){
         const cEvs=dotEvs.filter(e=>e.date===ds);
         dayCells+=`<div class="cal-cell" style="min-height:${rowH}px;background:${isToday?"#EEF2FF":"white"};border-color:${isToday?"#6366F1":"var(--border)"}">
           <div class="day-n" style="color:${DOW_C[col]};font-weight:${isToday?800:500}">${d}</div>
-          ${cEvs.slice(0,1).map(ev=>`<div class="e-dot" style="background:${ev.color}">${ev.title}</div>`).join("")}
+          ${cEvs.slice(0,1).map(ev=>`<div class="e-dot" style="background:${ev.color}">${esc(ev.title)}</div>`).join("")}
           ${cEvs.length>1?`<div style="font-size:7px;color:var(--light);padding:0 2px">+${cEvs.length-1}</div>`:""}
         </div>`;
       }
@@ -780,7 +779,7 @@ function renderSchedule(){
       ${evs.map(ev=>`<div class="ev-item" style="align-items:center">
           <div class="ev-bar" style="background:${ev.color}"></div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${ev.title}</div>
+            <div style="font-size:12px;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${esc(ev.title)}</div>
             <div style="font-size:10.5px;color:var(--light)">${ev.date}</div>
             ${ev.note?`<div style="font-size:10px;color:var(--muted,#aaa);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ev.note}</div>`:""}
           </div>
@@ -811,7 +810,7 @@ function renderSchedule(){
   <div style="margin-top:16px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px">
       <div style="font-weight:800;font-size:13px;color:var(--text)">이달의 일정 <span style="font-size:10.5px;color:var(--muted);font-weight:500">${monthEvs.length}건</span></div>
-      <button onclick="openEvModal()" style="padding:7px 14px;background:var(--blue);color:white;border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.2px">+ 일정 추가</button>
+      <button onclick="openEvModal()" class="btn-add-pill" style="background:var(--blue)">+ 일정 추가</button>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px">${kanban}</div>
   </div>
@@ -834,7 +833,7 @@ function renderTravel(){
       <div class="ev-item" style="align-items:flex-start">
         <div class="ev-bar" style="background:#10B981;margin-top:2px"></div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:12.5px;font-weight:700;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${t.dest}</div>
+          <div style="font-size:12.5px;font-weight:700;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${esc(t.dest)}</div>
           <div style="font-size:10.5px;color:var(--light)">${t.start}${t.end&&t.end!==t.start?` ~ ${t.end}`:""}</div>
           <div style="font-size:13px;font-weight:800;color:#10B981;margin-top:2px">${travelMainDisplay(t)} <span style="font-size:10.5px;font-weight:400;color:var(--muted)">${travelSubDisplay(t)}</span></div>
           ${t.note?`<div style="font-size:10.5px;color:var(--muted);margin-top:3px">${t.note}</div>`:""}
@@ -852,7 +851,7 @@ function renderTravel(){
       <div class="ev-item" style="align-items:flex-start">
         <div class="ev-bar" style="background:#E8920A;margin-top:2px"></div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:12.5px;font-weight:700">${w.name}</div>
+          <div style="font-size:12.5px;font-weight:700">${esc(w.name)}</div>
           ${w.note?`<div style="font-size:10.5px;color:var(--muted);margin-top:2px">${w.note}</div>`:""}
           <a href="https://www.google.com/maps/search/${encodeURIComponent(w.name)}" target="_blank" class="map-btn" style="margin-top:6px">🗺 Google Maps</a>
         </div>
@@ -878,7 +877,7 @@ function renderTravel(){
   <div style="margin-top:16px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px">
       <div style="font-weight:800;font-size:13px;color:var(--text)">여행한 곳 <span style="font-size:10.5px;color:var(--muted);font-weight:500">${state.travels.length}건</span></div>
-      <button onclick="openTrModal()" style="padding:7px 14px;background:#10B981;color:white;border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.2px">+ 여행기록 추가</button>
+      <button onclick="openTrModal()" class="btn-add-pill" style="background:#10B981">+ 여행기록 추가</button>
     </div>
     <div class="kanban-col" style="border-top:3px solid #10B981">
       <div class="kanban-hdr"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#10B981;flex-shrink:0"></span>여행한 곳<span style="font-size:10px;color:var(--light);font-weight:500;margin-left:auto">${state.travels.length}건</span></div>
@@ -890,7 +889,7 @@ function renderTravel(){
   <div style="margin-top:16px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px">
       <div style="font-weight:800;font-size:13px;color:var(--text)">가고 싶은 곳 <span style="font-size:10.5px;color:var(--muted);font-weight:500">${state.wishlist.length}건</span></div>
-      <button onclick="openWishModal()" style="padding:7px 14px;background:#E8920A;color:white;border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.2px">+ 버킷리스트 추가</button>
+      <button onclick="openWishModal()" class="btn-add-pill" style="background:#E8920A">+ 버킷리스트 추가</button>
     </div>
     <div class="kanban-col" style="border-top:3px solid #E8920A">
       <div class="kanban-hdr"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#E8920A;flex-shrink:0"></span>가고 싶은 곳<span style="font-size:10px;color:var(--light);font-weight:500;margin-left:auto">${state.wishlist.length}건</span></div>
@@ -999,10 +998,12 @@ function inputFin(el,field){
   saveLocal();clearTimeout(_finTimer);_finTimer=setTimeout(()=>renderContent(),700);
 }
 
+function _modalWrap(overlayId,closeFn,inner){
+  return`<div id="${overlayId}" onclick="if(event.target.id==='${overlayId}')${closeFn}()" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box"><div style="background:white;border-radius:16px;padding:24px;width:100%;max-width:340px;box-shadow:0 20px 60px rgba(0,0,0,.3);box-sizing:border-box;animation:fadeUp .2s ease both">${inner}</div></div>`;
+}
 function _evModalHTML(){
   const isEdit=!!state.editEvId;
-  return`<div id="ev-modal-overlay" onclick="if(event.target.id==='ev-modal-overlay')closeEvModal()" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box">
-  <div style="background:white;border-radius:16px;padding:24px;width:100%;max-width:340px;box-shadow:0 20px 60px rgba(0,0,0,.3);box-sizing:border-box;animation:fadeUp .2s ease both">
+  return _modalWrap("ev-modal-overlay","closeEvModal",`
     <div style="font-size:15px;font-weight:800;margin-bottom:16px;color:var(--text)">${isEdit?"✏️ 일정 수정":"＋ 일정 추가"}</div>
     <div style="display:flex;flex-direction:column;gap:10px">
       <div style="display:flex;gap:8px">
@@ -1028,8 +1029,7 @@ function _evModalHTML(){
         <button class="cancel-btn" onclick="closeEvModal()">취소</button>
       </div>
     </div>
-  </div>
-</div>`;
+    `);
 }
 function openEvModal(){state.editEvId=null;state.newEv={date:"",endDate:"",title:"",type:"personal",note:""};document.getElementById("modal-root").innerHTML=_evModalHTML();}
 function closeEvModal(){document.getElementById("modal-root").innerHTML="";}
@@ -1113,8 +1113,7 @@ function removeWish(id){state.wishlist=state.wishlist.filter(w=>w.id!==id);saveL
 function _trModalHTML(){
   const isEdit=!!state.editTrId;
   const t=isEdit?state.travels.find(t=>t.id===state.editTrId)||{}:{};
-  return`<div id="tr-modal-overlay" onclick="if(event.target.id==='tr-modal-overlay')closeTrModal()" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box">
-  <div style="background:white;border-radius:16px;padding:24px;width:100%;max-width:340px;box-shadow:0 20px 60px rgba(0,0,0,.3);box-sizing:border-box;animation:fadeUp .2s ease both">
+  return _modalWrap("tr-modal-overlay","closeTrModal",`
     <div style="font-size:15px;font-weight:800;margin-bottom:16px;color:var(--text)">${isEdit?"✏️ 여행기록 수정":"✈️ 여행기록 추가"}</div>
     <div style="display:flex;flex-direction:column;gap:10px">
       <input class="f-inp" id="tr-dest" placeholder="목적지 (예: Chicago, IL)" value="${t.dest||''}"/>
@@ -1135,14 +1134,12 @@ function _trModalHTML(){
         <button class="cancel-btn" onclick="closeTrModal()">취소</button>
       </div>
     </div>
-  </div>
-</div>`;}
+    `);}
 
 function _wishModalHTML(){
   const isEdit=!!state.editWishId;
   const w=isEdit?state.wishlist.find(w=>w.id===state.editWishId)||{}:{};
-  return`<div id="wish-modal-overlay" onclick="if(event.target.id==='wish-modal-overlay')closeWishModal()" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box">
-  <div style="background:white;border-radius:16px;padding:24px;width:100%;max-width:340px;box-shadow:0 20px 60px rgba(0,0,0,.3);box-sizing:border-box;animation:fadeUp .2s ease both">
+  return _modalWrap("wish-modal-overlay","closeWishModal",`
     <div style="font-size:15px;font-weight:800;margin-bottom:16px;color:var(--text)">${isEdit?"✏️ 버킷리스트 수정":"버킷리스트 추가"}</div>
     <div style="display:flex;flex-direction:column;gap:10px">
       <input class="f-inp" id="wish-name" placeholder="가고 싶은 곳 (예: Yellowstone NP)" value="${w.name||''}"/>
@@ -1152,8 +1149,7 @@ function _wishModalHTML(){
         <button class="cancel-btn" onclick="closeWishModal()">취소</button>
       </div>
     </div>
-  </div>
-</div>`;}
+    `);}
 
 function openTrModal(){document.getElementById("modal-root").innerHTML=_trModalHTML();}
 function closeTrModal(){document.getElementById("modal-root").innerHTML="";}
