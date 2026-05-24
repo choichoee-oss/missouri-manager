@@ -806,7 +806,7 @@ function renderSchedule(){
         const ds=`${cy}-${String(cm).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
         const isToday=ds===todayStr;
         const cEvs=dotEvs.filter(e=>e.date===ds);
-        dayCells+=`<div class="cal-cell" style="min-height:${rowH}px;background:${isToday?"#EEF2FF":"white"};border-color:${isToday?"#6366F1":"var(--border)"}">
+        dayCells+=`<div class="cal-cell" onclick="openEvModal('${ds}')" style="min-height:${rowH}px;background:${isToday?"#EEF2FF":"white"};border-color:${isToday?"#6366F1":"var(--border)"};cursor:pointer">
           <div class="day-n" style="color:${DOW_C[col]};font-weight:${isToday?800:500}">${d}</div>
           ${cEvs.slice(0,1).map(ev=>`<div class="e-dot" style="background:${ev.color}">${esc(ev.title)}</div>`).join("")}
           ${cEvs.length>1?`<div style="font-size:7px;color:var(--light);padding:0 2px">+${cEvs.length-1}</div>`:""}
@@ -1115,7 +1115,7 @@ function _evModalHTML(){
     </div>
     `);
 }
-function openEvModal(){state.editEvId=null;state.newEv={date:"",endDate:"",title:"",type:"personal",note:""};document.getElementById("modal-root").innerHTML=_evModalHTML();}
+function openEvModal(date){state.editEvId=null;state.newEv={date:date||"",endDate:"",title:"",type:"personal",note:""};document.getElementById("modal-root").innerHTML=_evModalHTML();}
 function closeEvModal(){document.getElementById("modal-root").innerHTML="";}
 function startEditEvent(id){
   const ev=state.events.find(e=>e.id===id);if(!ev)return;
