@@ -144,6 +144,7 @@ button:disabled{opacity:.3;cursor:not-allowed!important}
 .cal-cell:hover{border-color:var(--blue);box-shadow:0 2px 8px rgba(99,102,241,.12)}
 .day-n{font-size:11px;text-align:center;margin-bottom:3px;font-weight:700}
 .e-dot{border-radius:5px;padding:2px 5px;color:white;font-size:8px;margin-bottom:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:1.5}
+@media(max-width:600px){.cal-cell{min-width:0;overflow:hidden}.e-dot{width:100%;box-sizing:border-box;max-width:100%}}
 
 /* ── Buttons ── */
 .btn-primary{width:100%;padding:12px;background:var(--blue);color:white;border:none;border-radius:var(--r-sm);font-size:13px;font-weight:700;cursor:pointer;font-family:'Paperlogy','Apple SD Gothic Neo',sans-serif;transition:all .2s;letter-spacing:.3px}
