@@ -283,6 +283,7 @@ let _lastSaveTime = 0;
 let _lastKnownUpdateAt = null;
 let _dbSynced = false;
 let _pendingRender = false;
+let _realtimeChannel = null;
 
 async function saveSupabase() {
   _lastSaveTime = Date.now();
@@ -290,7 +291,7 @@ async function saveSupabase() {
   if (!_lastKnownUpdateAt || _saveAt > _lastKnownUpdateAt) _lastKnownUpdateAt = _saveAt;
   saveLocal();
   try {
-    await client.from('app_data').upsert({
+    const { data: saved } = await client.from('app_data').upsert({
       id: 'main',
       data: {
         finance: state.finance,
@@ -303,7 +304,8 @@ async function saveSupabase() {
         events: state.events
       },
       updated_at: _saveAt
-    });
+    }).select('updated_at').single();
+    if (saved?.updated_at && saved.updated_at > _lastKnownUpdateAt) _lastKnownUpdateAt = saved.updated_at;
   } catch(e) { console.warn('Supabase save error:', e); saveLocal(); }
 }
 
@@ -335,12 +337,16 @@ async function loadSupabase() {
 }
 
 function setupRealtime() {
-  client.channel('life-manager-sync')
+  if (_realtimeChannel) {
+    client.removeChannel(_realtimeChannel);
+    _realtimeChannel = null;
+  }
+  _realtimeChannel = client.channel('life-manager-sync')
     .on(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'app_data', filter: 'id=eq.main' },
       (payload) => {
-        if (Date.now() - _lastSaveTime < 3000) return;
+        if (Date.now() - _lastSaveTime < 5000) return;
         const eventAt = payload.new?.updated_at;
         if (eventAt && _lastKnownUpdateAt && eventAt <= _lastKnownUpdateAt) return;
         const d = payload.new?.data;
@@ -361,6 +367,7 @@ function setupRealtime() {
       if (status === 'SUBSCRIBED') console.log('[Realtime] 실시간 동기화 연결됨');
       if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
         console.warn('[Realtime] 연결 끊김, 3초 후 재연결 시도...');
+        _realtimeChannel = null;
         setTimeout(setupRealtime, 3000);
       }
     });
