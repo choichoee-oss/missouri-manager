@@ -275,10 +275,13 @@ button:disabled{opacity:.3;cursor:not-allowed!important}
 const { createClient } = supabase;
 const client = createClient(
   'https://yrqivcawwsbksqbfbgrw.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlycWl2Y2F3d3Nia3NxYmZiZ3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1MTI2MzQsImV4cCI6MjA5NTA4ODYzNH0.DnNr5TMCf_QYGuVHbzLhZhuKHXk71LqIlNY_0rmXd_w'
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlycWl2Y2F3d3Nia3NxYmZiZ3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1MTI2MzQsImV4cCI6MjA5NTA4ODYzNH0.DnNr5TMCf_QYGuVHbzLhZhuKHXk71LqIlNY_0rmXd_w',
+  { auth: { autoRefreshToken: true, persistSession: true } }
 );
+let _lastSaveTime = 0;
 
 async function saveSupabase() {
+  _lastSaveTime = Date.now();
   try {
     await client.from('app_data').upsert({
       id: 'main',
@@ -311,6 +314,35 @@ async function loadSupabase() {
     if (d.catOrder) state.catOrder = d.catOrder;
     if (d.events)  state.events  = d.events;
   } catch(e) { console.warn('Supabase load error:', e); loadLocal(); }
+}
+
+function setupRealtime() {
+  client.channel('life-manager-sync')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'app_data', filter: 'id=eq.main' },
+      (payload) => {
+        if (Date.now() - _lastSaveTime < 3000) return;
+        const d = payload.new?.data;
+        if (!d) return;
+        if (d.finance)  state.finance  = { ...buildInitFinance(), ...d.finance };
+        if (d.travels)  state.travels  = d.travels;
+        if (d.checks)   state.checks   = d.checks;
+        if (d.rate)     state.rate     = d.rate;
+        if (d.wishlist) state.wishlist = d.wishlist;
+        if (d.geoCache) state.geoCache = d.geoCache;
+        if (d.catOrder) state.catOrder = d.catOrder;
+        if (d.events)   state.events   = d.events;
+        renderContent();
+      }
+    )
+    .subscribe((status) => {
+      if (status === 'SUBSCRIBED') console.log('[Realtime] 실시간 동기화 연결됨');
+      if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+        console.warn('[Realtime] 연결 끊김, 3초 후 재연결 시도...');
+        setTimeout(setupRealtime, 3000);
+      }
+    });
 }
 /* ═══════════════════ */
 
@@ -1233,7 +1265,7 @@ function deleteCat(idx){
 }
 
 /* ── Init ── */
-loadSupabase().then(() => renderContent());
+loadSupabase().then(() => { renderContent(); setupRealtime(); });
 
 fetch("https://open.er-api.com/v6/latest/USD")
   .then(r=>r.json())
