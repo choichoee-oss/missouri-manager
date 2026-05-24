@@ -140,7 +140,7 @@ button:disabled{opacity:.3;cursor:not-allowed!important}
 /* ── Calendar ── */
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
 .day-hdr{text-align:center;font-size:9.5px;font-weight:700;padding:6px 0;color:var(--light);letter-spacing:.5px}
-.cal-cell{border-radius:8px;padding:5px 4px;min-height:66px;background:white;border:1px solid var(--border);transition:border-color .2s,box-shadow .2s}
+.cal-cell{border-radius:8px;padding:5px 4px;min-height:66px;overflow:hidden;background:white;border:1px solid var(--border);transition:border-color .2s,box-shadow .2s}
 .cal-cell:hover{border-color:var(--blue);box-shadow:0 2px 8px rgba(99,102,241,.12)}
 .day-n{font-size:11px;text-align:center;margin-bottom:3px;font-weight:700}
 .e-dot{border-radius:5px;padding:2px 5px;color:white;font-size:8px;margin-bottom:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:1.5}
@@ -826,7 +826,7 @@ function renderSchedule(){
     const wDates=Array.from({length:7},(_,c)=>_gds(week*7+c-fd+1));
     const wFirst=wDates.find(x=>x);const wLast=[...wDates].reverse().find(x=>x);
     const wEvs=(wFirst&&wLast)?spanEvs.filter(e=>e.date<=wLast&&e.endDate>=wFirst):[];
-    const rowH=66+wEvs.length*18; // cell height grows per event row
+    const rowH=66;
 
     // Day-number cells
     let dayCells="";
