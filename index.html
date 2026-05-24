@@ -280,6 +280,7 @@ const client = createClient(
 );
 let _lastSaveTime = 0;
 let _lastKnownUpdateAt = null;
+let _dbSynced = false;
 
 async function saveSupabase() {
   _lastSaveTime = Date.now();
@@ -309,6 +310,7 @@ async function loadSupabase() {
     if (error || !data) { loadLocal(); return; }
     const _loadedAt = data.updated_at || new Date().toISOString();
     if (!_lastKnownUpdateAt || _loadedAt > _lastKnownUpdateAt) _lastKnownUpdateAt = _loadedAt;
+    _dbSynced = true;
     const d = data.data;
     if (d.finance) state.finance = { ...buildInitFinance(), ...d.finance };
     if (d.travels) state.travels = d.travels;
@@ -1283,7 +1285,7 @@ loadSupabase().then(() => {
         state.rate=Math.round(d.rates.KRW);
         const updated=new Date(d.time_last_update_utc).toLocaleDateString("ko-KR");
         state.rateDate=updated+" 자동조회";
-        saveSupabase();updateRateDisplay();if(state.tab===0)renderContent();
+        if(_dbSynced){saveSupabase();}else{saveLocal();}updateRateDisplay();if(state.tab===0)renderContent();
       }
     })
     .catch(()=>{state.rateDate="자동조회 실패 — 수동입력";updateRateDisplay();});
