@@ -281,11 +281,13 @@ const client = createClient(
 let _lastSaveTime = 0;
 let _lastKnownUpdateAt = null;
 let _dbSynced = false;
+let _pendingRender = false;
 
 async function saveSupabase() {
   _lastSaveTime = Date.now();
   const _saveAt = new Date().toISOString();
   if (!_lastKnownUpdateAt || _saveAt > _lastKnownUpdateAt) _lastKnownUpdateAt = _saveAt;
+  saveLocal();
   try {
     await client.from('app_data').upsert({
       id: 'main',
@@ -308,6 +310,14 @@ async function loadSupabase() {
   try {
     const { data, error } = await client.from('app_data').select('data,updated_at').eq('id','main').single();
     if (error || !data) { loadLocal(); return; }
+    const _localTime = localStorage.getItem('msl_time') || '';
+    const _dbTime = data.updated_at || '';
+    if (_localTime > _dbTime) {
+      loadLocal();
+      _lastKnownUpdateAt = _localTime;
+      _dbSynced = true;
+      return;
+    }
     const _loadedAt = data.updated_at || new Date().toISOString();
     if (!_lastKnownUpdateAt || _loadedAt > _lastKnownUpdateAt) _lastKnownUpdateAt = _loadedAt;
     _dbSynced = true;
@@ -343,7 +353,7 @@ function setupRealtime() {
         if (d.geoCache) state.geoCache = d.geoCache;
         if (d.catOrder) state.catOrder = d.catOrder;
         if (d.events)   state.events   = d.events;
-        renderContent();
+        safeRenderContent();
       }
     )
     .subscribe((status) => {
@@ -476,12 +486,14 @@ function loadLocal(){
 }
 function saveLocal(){
   try{
+    const _t=new Date().toISOString();
     localStorage.setItem("msl_data",JSON.stringify({
       finance:state.finance,travels:state.travels,
       checks:state.checks,rate:state.rate,
       wishlist:state.wishlist,geoCache:state.geoCache,
       catOrder:state.catOrder,events:state.events
     }));
+    localStorage.setItem("msl_time",_t);
   }catch(e){}
 }
 
@@ -618,6 +630,9 @@ function switchTab(i){
 }
 
 function renderContent(){
+  const ae=document.activeElement;
+  let _ff=null,_fc=0;
+  if(ae&&ae.tagName==='INPUT'){const m=(ae.getAttribute('oninput')||'').match(/inputFin\(this,'(\w+)'\)/);if(m){_ff=m[1];_fc=ae.selectionStart;}}
   const el=document.getElementById("main-content");
   updateRateDisplay();
   if(state.tab===0)el.innerHTML=renderFinance();
@@ -628,6 +643,13 @@ function renderContent(){
     setTimeout(()=>initTravelMap(),80);
   }
   if(state.tab===3)el.innerHTML=renderChecklist();
+  if(_ff){const inp=el.querySelector(`input[oninput*="'${_ff}'"]`);if(inp){inp.focus();try{inp.setSelectionRange(_fc,_fc);}catch(e){}}}
+}
+function safeRenderContent(){
+  const mr=document.getElementById('modal-root');
+  if(mr&&mr.innerHTML.trim()){_pendingRender=true;return;}
+  _pendingRender=false;
+  renderContent();
 }
 
 /* ════════════════════════════════════
@@ -1081,7 +1103,7 @@ function inputFin(el,field){
   el.selectionStart=el.selectionEnd=Math.max(0,cursor+(newLen-oldLen));
   if(!state.finance[state.finM])state.finance[state.finM]={};
   state.finance[state.finM][field]=raw;
-  saveSupabase();clearTimeout(_finTimer);_finTimer=setTimeout(()=>renderContent(),700);
+  saveSupabase();clearTimeout(_finTimer);_finTimer=setTimeout(()=>safeRenderContent(),700);
 }
 
 function _modalWrap(overlayId,closeFn,inner){
@@ -1118,7 +1140,7 @@ function _evModalHTML(){
     `);
 }
 function openEvModal(date){state.editEvId=null;state.newEv={date:date||"",endDate:"",title:"",type:"personal",note:""};document.getElementById("modal-root").innerHTML=_evModalHTML();}
-function closeEvModal(){document.getElementById("modal-root").innerHTML="";}
+function closeEvModal(){document.getElementById("modal-root").innerHTML="";if(_pendingRender){_pendingRender=false;renderContent();}}
 function startEditEvent(id){
   const ev=state.events.find(e=>e.id===id);if(!ev)return;
   state.editEvId=id;state.newEv={date:ev.date,endDate:ev.endDate||"",title:ev.title,type:ev.type,note:ev.note||""};
@@ -1238,9 +1260,9 @@ function _wishModalHTML(){
     `);}
 
 function openTrModal(){document.getElementById("modal-root").innerHTML=_trModalHTML();}
-function closeTrModal(){document.getElementById("modal-root").innerHTML="";}
+function closeTrModal(){document.getElementById("modal-root").innerHTML="";if(_pendingRender){_pendingRender=false;renderContent();}}
 function openWishModal(){state.editWishId=null;document.getElementById("modal-root").innerHTML=_wishModalHTML();}
-function closeWishModal(){document.getElementById("modal-root").innerHTML="";}
+function closeWishModal(){document.getElementById("modal-root").innerHTML="";if(_pendingRender){_pendingRender=false;renderContent();}}
 function startEditWish(id){state.editWishId=id;document.getElementById("modal-root").innerHTML=_wishModalHTML();}
 
 function toggleCheck(id){state.checks=state.checks.map(c=>c.id===id?{...c,done:!c.done}:c);saveSupabase();renderContent();}
@@ -1275,6 +1297,7 @@ function deleteCat(idx){
 }
 
 /* ── Init ── */
+window.addEventListener('beforeunload', ()=>saveLocal());
 loadSupabase().then(() => {
   renderContent();
   setupRealtime();
