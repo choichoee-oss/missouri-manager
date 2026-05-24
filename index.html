@@ -279,9 +279,12 @@ const client = createClient(
   { auth: { autoRefreshToken: true, persistSession: true } }
 );
 let _lastSaveTime = 0;
+let _lastKnownUpdateAt = null;
 
 async function saveSupabase() {
   _lastSaveTime = Date.now();
+  const _saveAt = new Date().toISOString();
+  if (!_lastKnownUpdateAt || _saveAt > _lastKnownUpdateAt) _lastKnownUpdateAt = _saveAt;
   try {
     await client.from('app_data').upsert({
       id: 'main',
@@ -295,15 +298,17 @@ async function saveSupabase() {
         catOrder: state.catOrder,
         events: state.events
       },
-      updated_at: new Date().toISOString()
+      updated_at: _saveAt
     });
   } catch(e) { console.warn('Supabase save error:', e); saveLocal(); }
 }
 
 async function loadSupabase() {
   try {
-    const { data, error } = await client.from('app_data').select('data').eq('id','main').single();
+    const { data, error } = await client.from('app_data').select('data,updated_at').eq('id','main').single();
     if (error || !data) { loadLocal(); return; }
+    const _loadedAt = data.updated_at || new Date().toISOString();
+    if (!_lastKnownUpdateAt || _loadedAt > _lastKnownUpdateAt) _lastKnownUpdateAt = _loadedAt;
     const d = data.data;
     if (d.finance) state.finance = { ...buildInitFinance(), ...d.finance };
     if (d.travels) state.travels = d.travels;
@@ -323,8 +328,11 @@ function setupRealtime() {
       { event: '*', schema: 'public', table: 'app_data', filter: 'id=eq.main' },
       (payload) => {
         if (Date.now() - _lastSaveTime < 3000) return;
+        const eventAt = payload.new?.updated_at;
+        if (eventAt && _lastKnownUpdateAt && eventAt <= _lastKnownUpdateAt) return;
         const d = payload.new?.data;
         if (!d) return;
+        if (eventAt) _lastKnownUpdateAt = eventAt;
         if (d.finance)  state.finance  = { ...buildInitFinance(), ...d.finance };
         if (d.travels)  state.travels  = d.travels;
         if (d.checks)   state.checks   = d.checks;
@@ -1265,18 +1273,20 @@ function deleteCat(idx){
 }
 
 /* ── Init ── */
-loadSupabase().then(() => { renderContent(); setupRealtime(); });
-
-fetch("https://open.er-api.com/v6/latest/USD")
-  .then(r=>r.json())
-  .then(d=>{
-    if(d.result==="success"&&d.rates?.KRW){
-      state.rate=Math.round(d.rates.KRW);
-      const updated=new Date(d.time_last_update_utc).toLocaleDateString("ko-KR");
-      state.rateDate=updated+" 자동조회";
-      saveSupabase();updateRateDisplay();if(state.tab===0)renderContent();
-    }
-  })
-  .catch(()=>{state.rateDate="자동조회 실패 — 수동입력";updateRateDisplay();});
+loadSupabase().then(() => {
+  renderContent();
+  setupRealtime();
+  fetch("https://open.er-api.com/v6/latest/USD")
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.result==="success"&&d.rates?.KRW){
+        state.rate=Math.round(d.rates.KRW);
+        const updated=new Date(d.time_last_update_utc).toLocaleDateString("ko-KR");
+        state.rateDate=updated+" 자동조회";
+        saveSupabase();updateRateDisplay();if(state.tab===0)renderContent();
+      }
+    })
+    .catch(()=>{state.rateDate="자동조회 실패 — 수동입력";updateRateDisplay();});
+});
 </script></body>
 </html>
