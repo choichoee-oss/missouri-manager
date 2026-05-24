@@ -819,7 +819,7 @@ function renderSchedule(){
     const wDates=Array.from({length:7},(_,c)=>_gds(week*7+c-fd+1));
     const wFirst=wDates.find(x=>x);const wLast=[...wDates].reverse().find(x=>x);
     const wEvs=(wFirst&&wLast)?spanEvs.filter(e=>e.date<=wLast&&e.endDate>=wFirst):[];
-    const rowH=66+wEvs.length*20; // cell height grows per event row
+    const rowH=66+wEvs.length*18; // cell height grows per event row
 
     // Day-number cells
     let dayCells="";
@@ -833,7 +833,7 @@ function renderSchedule(){
         const cEvs=dotEvs.filter(e=>e.date===ds);
         dayCells+=`<div class="cal-cell" onclick="openEvModal('${ds}')" style="min-height:${rowH}px;background:${isToday?"#EEF2FF":"white"};border-color:${isToday?"#6366F1":"var(--border)"};cursor:pointer">
           <div class="day-n" style="color:${DOW_C[col]};font-weight:${isToday?800:600}">${d}</div>
-          ${wEvs.length>0?`<div style="height:${wEvs.length*20+2}px"></div>`:''}
+          ${wEvs.length>0?`<div style="height:${wEvs.length*18+6}px"></div>`:''}
           ${cEvs.slice(0,2).map(ev=>`<div class="e-dot" style="background:${ev.color}">${esc(ev.title)}</div>`).join("")}
           ${cEvs.length>2?`<div style="font-size:8px;color:var(--light);padding:0 2px">+${cEvs.length-2}</div>`:""}
         </div>`;
@@ -851,8 +851,8 @@ function renderSchedule(){
         const ec=new Date(se+'T12:00:00').getDay()+2;
         const iS=ev.date>=wFirst,iE=ev.endDate<=wLast;
         const br=`${iS?'5px':'1px'} ${iE?'5px':'1px'} ${iE?'5px':'1px'} ${iS?'5px':'1px'}`;
-        return`<div style="grid-column:${sc}/${ec};grid-row:1;padding-top:${28+idx*20}px;box-sizing:border-box">
-          <div style="height:16px;background:${ev.color};border-radius:${br};line-height:16px;padding:0 6px;color:white;font-size:10px;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${iS?ev.title:''}</div>
+        return`<div style="grid-column:${sc}/${ec};grid-row:1;padding-top:${28+idx*18}px;box-sizing:border-box">
+          <div style="background:${ev.color};border-radius:${br};line-height:1.5;padding:2px 5px;color:white;font-size:8px;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${iS?ev.title:''}</div>
         </div>`;
       }).join("");
       overlay=`<div style="position:absolute;inset:0;display:grid;grid-template-columns:repeat(7,1fr);gap:3px;pointer-events:none">${bars}</div>`;
